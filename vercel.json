@@ -4,12 +4,8 @@
   "outputDirectory": "./",
   "routes": [
     {
-      "src": "/api/health",
-      "dest": "/api/health.js"
-    },
-    {
-      "src": "/api/multi-agent-roadmap",
-      "dest": "/api/multi-agent-roadmap.js"
+      "src": "/api/(.*)",
+      "dest": "/api/index.js"
     },
     {
       "src": "/static/(.*)",
