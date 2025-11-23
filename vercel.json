@@ -5,9 +5,27 @@
   "functions": {
     "api/index.js": {
       "maxDuration": 30
+    },
+    "api/health.js": {
+      "maxDuration": 10
+    },
+    "api/multi-agent-roadmap.js": {
+      "maxDuration": 30
     }
   },
   "routes": [
+    {
+      "src": "/api/health",
+      "dest": "/api/health.js"
+    },
+    {
+      "src": "/api/multi-agent-roadmap",
+      "dest": "/api/multi-agent-roadmap.js"
+    },
+    {
+      "src": "/multi-agent-roadmap",
+      "dest": "/api/multi-agent-roadmap.js"
+    },
     {
       "src": "/api/(.*)",
       "dest": "/api/index.js"
