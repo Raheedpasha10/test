@@ -41,4 +41,16 @@ app.include_router(real_multi_agent.router, prefix="/api/real-multi-agent")
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host=settings.HOST, port=settings.PORT)
+    import os
+    
+    # Use PORT environment variable for Render deployment
+    port = int(os.getenv("PORT", settings.PORT))
+    host = os.getenv("HOST", settings.HOST)
+    
+    print(f"🚀 Starting Student Compass API...")
+    print(f"📍 Environment: {settings.ENVIRONMENT}")
+    print(f"🌐 Host: {host}")
+    print(f"🔌 Port: {port}")
+    print(f"🔑 Groq API: {'✅ Configured' if settings.GROQ_API_KEY else '❌ Missing'}")
+    
+    uvicorn.run(app, host=host, port=port)
