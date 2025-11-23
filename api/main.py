@@ -6,10 +6,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from groq import Groq
-import google.generativeai as genai
 
 # Create FastAPI app
-app = FastAPI(title="Margdarshan API")
+app = FastAPI(title="Student Compass API")
 
 # Add CORS middleware
 app.add_middleware(
@@ -20,28 +19,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize AI clients
+# Initialize Groq client
 groq_client = None
-gemini_model = None
-
 try:
     groq_api_key = os.getenv("GROQ_API_KEY")
     if groq_api_key:
         groq_client = Groq(api_key=groq_api_key)
-        
-    google_api_key = os.getenv("GOOGLE_GENAI_API_KEY") 
-    if google_api_key:
-        genai.configure(api_key=google_api_key)
-        gemini_model = genai.GenerativeModel('gemini-2.0-flash-exp')
 except Exception as e:
-    print(f"Warning: AI client initialization failed: {e}")
+    print(f"Warning: Groq client initialization failed: {e}")
 
 @app.get("/api/health")
 async def health_check():
     return {
         "status": "healthy",
-        "groq_available": groq_client is not None,
-        "gemini_available": gemini_model is not None
+        "groq_available": groq_client is not None
     }
 
 @app.post("/api/multi-agent-roadmap")
