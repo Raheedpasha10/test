@@ -1,0 +1,20 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = false
+	logallrefupdates = true
+	ignorecase = true
+	precomposeunicode = true
+[branch "main"]
+	vscode-merge-base = origin/main
+	vscode-merge-base = origin/main
+[remote "new-repo"]
+	url = https://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@github.com/Raheedpasha10/student_compass_.git
+	fetch = +refs/heads/*:refs/remotes/new-repo/*
+[pull]
+	rebase = false
+[branch "deployment-clean"]
+	vscode-merge-base = origin/main
+[remote "origin"]
+	url = https://github.com/Raheedpasha10/test.git
+	fetch = +refs/heads/*:refs/remotes/origin/*

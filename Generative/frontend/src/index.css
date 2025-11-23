@@ -1,0 +1,326 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Linear Design System - Base Layer */
+@layer base {
+  /* Import Inter Variable Font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+  /* Root Variables - Linear Design Tokens */
+  :root {
+    /* Layout */
+    --header-height: 64px;
+    --header-blur: 20px;
+    --page-padding-inline: 24px;
+    --page-padding-block: 64px;
+    --page-max-width: 1024px;
+    
+    /* Border Radius */
+    --radius-4: 4px;
+    --radius-6: 6px;
+    --radius-8: 8px;
+    --radius-10: 10px;
+    --radius-12: 12px;
+    --radius-16: 16px;
+    --radius-rounded: 9999px;
+    
+    /* Border Width */
+    --border-hairline: 1px;
+    
+    /* Font Family */
+    --font-regular: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+    
+    /* Font Weights */
+    --font-weight-light: 300;
+    --font-weight-normal: 400;
+    --font-weight-medium: 510;
+    --font-weight-semibold: 590;
+    --font-weight-bold: 680;
+    
+    /* Transition Speeds */
+    --speed-quick: .1s;
+    --speed-regular: .16s;
+    --speed-slow: .25s;
+    
+    /* Easing Functions */
+    --ease-out-quad: cubic-bezier(.25, .46, .45, .94);
+    --ease-out-cubic: cubic-bezier(.215, .61, .355, 1);
+    --ease-out-quart: cubic-bezier(.165, .84, .44, 1);
+    --ease-in-out-quad: cubic-bezier(.455, .03, .515, .955);
+    
+    /* Shadows */
+    --shadow-none: 0px 0px 0px transparent;
+    --shadow-low: 0px 2px 4px rgba(0, 0, 0, .1);
+    --shadow-medium: 0px 4px 24px rgba(0, 0, 0, .2);
+    --shadow-high: 0px 7px 32px rgba(0, 0, 0, .35);
+    
+    /* Scrollbar */
+    --scrollbar-color: rgba(255, 255, 255, .1);
+    --scrollbar-color-hover: rgba(255, 255, 255, .2);
+    --scrollbar-color-active: rgba(255, 255, 255, .4);
+    --scrollbar-size: 6px;
+    
+    /* Colors - Dark Theme (Linear default) */
+    --color-bg-primary: #08090a;
+    --color-bg-secondary: #1c1c1f;
+    --color-bg-tertiary: #232326;
+    --color-bg-quaternary: #28282c;
+    --color-bg-marketing: #010102;
+    --color-bg-translucent: rgba(255, 255, 255, .05);
+    
+    --color-border-primary: #23252a;
+    --color-border-secondary: #34343a;
+    --color-border-tertiary: #3e3e44;
+    --color-border-translucent: rgba(255, 255, 255, .05);
+    
+    --color-text-primary: #f7f8f8;
+    --color-text-secondary: #d0d6e0;
+    --color-text-tertiary: #8a8f98;
+    --color-text-quaternary: #62666d;
+    
+    --color-link-primary: #828fff;
+    --color-link-hover: #fff;
+    
+    --color-brand-bg: #5e6ad2;
+    --color-brand-text: #fff;
+    
+    --color-accent: #7170ff;
+    --color-accent-hover: #828fff;
+    
+    --header-bg: rgba(11, 11, 11, .8);
+    --header-border: rgba(255, 255, 255, .08);
+  }
+  
+  @media only screen and (min-device-pixel-ratio: 2) {
+    :root {
+      --border-hairline: .5px;
+    }
+  }
+  
+  /* Base Styles */
+  * {
+    box-sizing: border-box;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-regular);
+    background: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    line-height: 1.6;
+    font-size: 15px;
+    font-weight: var(--font-weight-normal);
+  }
+  
+  /* Typography */
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: var(--font-weight-semibold);
+    line-height: 1.2;
+    letter-spacing: -.012em;
+    color: var(--color-text-primary);
+  }
+  
+  h1 {
+    font-size: 3rem;
+    letter-spacing: -.022em;
+    line-height: 1.1;
+  }
+  
+  h2 {
+    font-size: 2rem;
+    letter-spacing: -.022em;
+    line-height: 1.125;
+  }
+  
+  h3 {
+    font-size: 1.5rem;
+    line-height: 1.33;
+  }
+  
+  p {
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+  }
+  
+  a {
+    color: var(--color-link-primary);
+    text-decoration: none;
+    transition: color var(--speed-regular) var(--ease-out-quad);
+  }
+  
+  a:hover {
+    color: var(--color-link-hover);
+  }
+  
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-color);
+    border-radius: var(--radius-rounded);
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--scrollbar-color-hover);
+  }
+  
+  ::-webkit-scrollbar-thumb:active {
+    background-color: var(--scrollbar-color-active);
+  }
+  
+  /* Selection */
+  ::selection {
+    background: var(--color-brand-bg);
+    color: var(--color-brand-text);
+  }
+}
+
+/* Linear Animation Keyframes */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Utility Classes */
+@layer utilities {
+  /* Linear Button Base - will be used in component */
+  .linear-button-base {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: var(--font-weight-medium);
+    border-radius: var(--radius-10);
+    transition: var(--speed-regular) var(--ease-out-quad);
+    transition-property: border, background-color, color, box-shadow, opacity, filter, transform;
+    cursor: pointer;
+    user-select: none;
+  }
+  
+  /* Linear Card Base */
+  .linear-card {
+    background: var(--color-bg-secondary);
+    border: var(--border-hairline) solid var(--color-border-primary);
+    border-radius: var(--radius-12);
+    transition: background var(--speed-regular) var(--ease-out-quad);
+  }
+  
+  .linear-card:hover {
+    background: var(--color-bg-tertiary);
+  }
+  
+  /* Glass Effect */
+  .linear-glass {
+    backdrop-filter: blur(var(--header-blur));
+    -webkit-backdrop-filter: blur(var(--header-blur));
+    background: var(--header-bg);
+    border: var(--border-hairline) solid var(--header-border);
+  }
+  
+  /* Focus Ring */
+  .linear-focus-ring:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--color-brand-bg);
+  }
+  
+  /* Animations */
+  .animate-fade-in {
+    animation: fadeIn 0.3s var(--ease-out-quad) forwards;
+  }
+  
+  .animate-scale-in {
+    animation: scaleIn var(--speed-regular) var(--ease-out-quad) forwards;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.4s var(--ease-out-quart) forwards;
+  }
+  
+  /* Text Utilities */
+  .text-primary {
+    color: var(--color-text-primary);
+  }
+  
+  .text-secondary {
+    color: var(--color-text-secondary);
+  }
+  
+  .text-tertiary {
+    color: var(--color-text-tertiary);
+  }
+  
+  /* Container */
+  .linear-container {
+    max-width: var(--page-max-width);
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: var(--page-padding-inline);
+    padding-right: var(--page-padding-inline);
+  }
+
+  /* Lenis Smooth Scroll */
+  html.lenis,
+  html.lenis body {
+    height: auto;
+  }
+
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+
+  .lenis.lenis-smooth [data-lenis-prevent] {
+    overscroll-behavior: contain;
+  }
+
+  .lenis.lenis-stopped {
+    overflow: hidden;
+  }
+
+  .lenis.lenis-smooth iframe {
+    pointer-events: none;
+  }
+}
