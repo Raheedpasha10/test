@@ -3,7 +3,7 @@ services:
   - type: web
     name: student-compass-api
     env: python
-    runtime: python-3.11.9
+    pythonVersion: "3.11"
     buildCommand: |
       cd Generative
       pip install --upgrade pip
