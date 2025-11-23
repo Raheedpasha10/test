@@ -1,8 +1,7 @@
 {
   "version": 2,
-  "buildCommand": "cd Generative/frontend && npm run build",
-  "outputDirectory": "Generative/frontend/build",
-  "framework": "create-react-app",
+  "buildCommand": "npm run build",
+  "outputDirectory": "./",
   "functions": {
     "api/index.js": {
       "maxDuration": 30
