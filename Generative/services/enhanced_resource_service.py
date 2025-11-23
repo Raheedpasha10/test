@@ -409,17 +409,42 @@ class EnhancedResourceService:
                 return []
             
             print(f"🔑 Using YouTube API key: {self.youtube_api_key[:15]}...")
+            print(f"🎯 Searching YouTube for SPECIFIC topic: '{topic}' at level: {level}")
             
-            # Enhanced search queries based on level and topic
+            # Create highly specific search queries for the exact topic
+            # Ensure each search is unique and topic-specific
             search_queries = [
                 f"{topic} tutorial {level}",
                 f"{topic} course complete",
-                f"learn {topic} programming",
-                f"{topic} for beginners" if level == "beginner" else f"advanced {topic}",
-                f"{topic} project tutorial"
+                f"learn {topic} step by step",
+                f"{topic} {level} guide" if level != "beginner" else f"{topic} beginner tutorial",
+                f"{topic} masterclass training"
             ]
             
+            # Make queries more specific to avoid generic results
+            if any(word in topic.lower() for word in ['data science', 'machine learning', 'ai']):
+                search_queries = [
+                    f"{topic} python tutorial {level}",
+                    f"{topic} complete course 2024",
+                    f"{topic} projects tutorial"
+                ]
+            elif any(word in topic.lower() for word in ['web development', 'frontend', 'backend']):
+                search_queries = [
+                    f"{topic} javascript tutorial {level}",
+                    f"{topic} full stack course",
+                    f"{topic} project build"
+                ]
+            elif any(word in topic.lower() for word in ['mobile', 'android', 'ios']):
+                search_queries = [
+                    f"{topic} app development {level}",
+                    f"{topic} complete tutorial",
+                    f"{topic} project course"
+                ]
+            
+            print(f"📝 Topic-specific search queries: {search_queries}")
+            
             all_videos = []
+            seen_video_ids = set()  # Prevent duplicates
             
             for query in search_queries[:2]:  # Use top 2 queries
                 url = "https://www.googleapis.com/youtube/v3/search"
@@ -445,6 +470,11 @@ class EnhancedResourceService:
                     for item in data.get('items', []):
                         video_id = item['id']['videoId']
                         snippet = item['snippet']
+                        
+                        # Skip duplicates
+                        if video_id in seen_video_ids:
+                            continue
+                        seen_video_ids.add(video_id)
                         
                         # Get additional video details
                         video_details = self._get_video_details(video_id)
