@@ -2,16 +2,14 @@
   "version": 2,
   "buildCommand": "npm run build",
   "outputDirectory": "./",
-  "functions": {
-    "api/index.py": {
-      "runtime": "@vercel/python@4.3.0",
-      "maxDuration": 30
-    }
-  },
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/index.py"
+      "src": "/api/health",
+      "dest": "/api/health.js"
+    },
+    {
+      "src": "/api/multi-agent-roadmap",
+      "dest": "/api/multi-agent-roadmap.js"
     },
     {
       "src": "/static/(.*)",
