@@ -4,7 +4,18 @@ services:
     name: student-compass
     env: python
     pythonVersion: "3.11"
-    buildCommand: "./build.sh"
+    buildCommand: |
+      echo "🐍 Installing Python dependencies..."
+      cd Generative
+      pip install --upgrade pip
+      pip install -r requirements.txt
+      echo "📦 Installing Node.js dependencies..."
+      cd frontend
+      npm ci
+      echo "🏗️ Building React frontend..."
+      npm run build
+      echo "✅ Build complete!"
+      ls -la build/
     startCommand: "cd Generative && python main.py"
     envVars:
       - key: GROQ_API_KEY
