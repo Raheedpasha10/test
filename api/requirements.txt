@@ -1,0 +1,19 @@
+# Core Framework (from your working local setup)
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# HTTP Client and Async Support (same as local)
+httpx==0.25.2
+aiohttp==3.9.1
+requests==2.31.0
+
+# Data Processing and Validation (same as local)
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Environment and Configuration (same as local)
+python-dotenv==1.0.0
+python-multipart==0.0.6
+
+# Essential for your multi-agent system
+google-generativeai==0.3.2
