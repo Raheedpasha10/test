@@ -1,17 +1,16 @@
-# Ultra-minimal requirements for Render deployment - Maximum compatibility
-# Core Framework
-fastapi==0.100.0
-uvicorn==0.23.0
+# Python 3.13 compatible requirements - FINAL FIX
+# Core Framework - Python 3.13 compatible versions
+fastapi==0.110.0
+uvicorn==0.27.0
 
 # HTTP Client 
-httpx==0.24.0
+httpx==0.26.0
 
-# Data Processing and Validation - older stable versions
-pydantic==1.10.9
+# Data Processing and Validation - Python 3.13 compatible
+pydantic==2.6.0
 
 # Environment and Configuration
 python-dotenv==1.0.0
 python-multipart==0.0.6
 
-# Essential for multi-agent system
-google-generativeai==0.3.2
+# Remove google-generativeai to avoid dependency conflicts
