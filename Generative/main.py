@@ -42,32 +42,48 @@ app.include_router(multi_agent_roadmap.router)  # NEW: Multi-agent V2 endpoints
 from routes import real_multi_agent
 app.include_router(real_multi_agent.router, prefix="/api/real-multi-agent")
 
-# Mount static files for frontend
-static_dir = os.path.join(os.path.dirname(__file__), "frontend", "build", "static")
+# Check if frontend build exists
+build_dir = os.path.join(os.path.dirname(__file__), "frontend", "build")
+static_dir = os.path.join(build_dir, "static")
+
+print(f"🔍 Checking build directory: {build_dir}")
+print(f"📁 Build directory exists: {os.path.exists(build_dir)}")
+print(f"📁 Static directory exists: {os.path.exists(static_dir)}")
+
+# Mount static files BEFORE defining routes
 if os.path.exists(static_dir):
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
+    print("✅ Mounted static files at /static")
 
-# Serve React app
-@app.get("/", response_class=FileResponse)
+# Route for root path to serve React app
+@app.get("/")
 async def serve_frontend():
     """Serve the React frontend"""
     frontend_path = os.path.join(os.path.dirname(__file__), "frontend", "build", "index.html")
+    print(f"🏠 Serving frontend from: {frontend_path}")
+    print(f"📄 Frontend file exists: {os.path.exists(frontend_path)}")
+    
     if os.path.exists(frontend_path):
-        return FileResponse(frontend_path)
+        return FileResponse(frontend_path, media_type='text/html')
     else:
-        return {"message": "MARGDARSHAK API is running"}
+        return {"message": "MARGDARSHAK API is running - Frontend build not found"}
 
-# Catch-all route for React Router
-@app.get("/{full_path:path}", response_class=FileResponse)
-async def serve_frontend_routes(full_path: str):
-    """Serve React app for all frontend routes"""
-    # Don't intercept API routes
-    if full_path.startswith("api/") or full_path.startswith("docs") or full_path.startswith("openapi.json"):
+# Serve static assets directly (favicon, manifest, etc.)
+@app.get("/{filename}")
+async def serve_static_files(filename: str):
+    """Serve static files from build directory"""
+    # Skip API routes
+    if filename.startswith("api") or filename.startswith("docs") or filename == "openapi.json":
         return {"error": "Not Found"}
     
+    file_path = os.path.join(os.path.dirname(__file__), "frontend", "build", filename)
+    if os.path.exists(file_path) and os.path.isfile(file_path):
+        return FileResponse(file_path)
+    
+    # If not a static file, serve React app (for client-side routing)
     frontend_path = os.path.join(os.path.dirname(__file__), "frontend", "build", "index.html")
     if os.path.exists(frontend_path):
-        return FileResponse(frontend_path)
+        return FileResponse(frontend_path, media_type='text/html')
     else:
         return {"message": "MARGDARSHAK API is running"}
 
