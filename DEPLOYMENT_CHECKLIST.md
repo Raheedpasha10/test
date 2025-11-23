@@ -40,8 +40,8 @@ vercel --prod
 Set these in Vercel Dashboard before deployment:
 
 ```
-GROQ_API_KEY=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
-GOOGLE_GENAI_API_KEY=AIzaSyDKnGmFUmbYatesQL_JpFS_1PcfLxCdMtY
+GROQ_API_KEY=your_working_groq_api_key_here
+GOOGLE_GENAI_API_KEY=your_working_google_api_key_here
 ENVIRONMENT=production
 ```
 
