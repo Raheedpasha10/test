@@ -1,4 +1,4 @@
-# Render-compatible requirements - NO RUST COMPILATION NEEDED
+# Render-compatible requirements - ALL WORKING DEPENDENCIES
 # Use pre-compiled wheel versions only
 fastapi[standard]==0.115.4
 pydantic==2.10.4
@@ -10,6 +10,9 @@ aiohttp==3.9.1
 # Authentication and Security
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
+
+# AI Services - Your Multi-Agent System Core
+groq==0.15.0
 
 # Environment and Configuration
 python-dotenv==1.0.0
