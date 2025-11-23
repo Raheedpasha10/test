@@ -582,7 +582,7 @@ class EnhancedResourceService:
             
             # Create highly specific prompt based on the topic
             prompt = f"""
-            You are an expert in {topic} education. Recommend ONLY {limit} REAL, EXISTING online courses specifically for "{topic}" at {level} level.
+            You are an expert in {topic} education. Recommend EXACTLY 15 REAL, EXISTING online courses specifically for "{topic}" at {level} level.
 
             CRITICAL REQUIREMENTS:
             1. Each course MUST be specifically about "{topic}" - not general programming or generic skills
@@ -614,7 +614,25 @@ class EnhancedResourceService:
             FORBIDDEN: Do NOT include generic "programming basics" or "computer science fundamentals" courses.
             REQUIRED: Every single course must be specifically about "{topic}" and use {topic}-specific terminology.
             
-            Return as JSON array ONLY with fields: title, url, description, provider, instructor, duration, price, rating, students, level
+            IMPORTANT: You MUST provide exactly 15 different courses. Do not provide fewer than 15.
+            
+            Return ONLY a clean JSON array with exactly these fields for each course:
+            [
+                {{
+                    "title": "Specific Course Name",
+                    "url": "https://platform.com/course-url",
+                    "description": "Detailed description",
+                    "provider": "Platform Name",
+                    "instructor": "Instructor Name",
+                    "duration": "X hours/months",
+                    "price": "$XX or Free",
+                    "rating": "4.X/5",
+                    "students": "XXX enrolled",
+                    "level": "{level}"
+                }}
+            ]
+            
+            NO additional text, explanations, or formatting - JUST the JSON array.
             """
             
             print(f"🎓 Generating SPECIALIZED course recommendations for: {topic}")
@@ -652,7 +670,7 @@ class EnhancedResourceService:
                 return []
             
             prompt = f"""
-            You are a {topic} expert librarian. Recommend ONLY {limit} REAL, EXISTING books specifically for "{topic}" at {level} level.
+            You are a {topic} expert librarian. Recommend EXACTLY 15 REAL, EXISTING books specifically for "{topic}" at {level} level.
 
             CRITICAL REQUIREMENTS:
             1. Each book MUST be specifically about "{topic}" - not general programming or computer science
@@ -684,7 +702,24 @@ class EnhancedResourceService:
             FORBIDDEN: Do NOT include generic "programming fundamentals" or "computer science basics" books.
             REQUIRED: Every single book must be specifically about "{topic}" and use {topic}-specific terminology.
             
-            Return as JSON array ONLY with fields: title, url, description, provider, instructor, price, rating, language, level
+            IMPORTANT: You MUST provide exactly 15 different books. Do not provide fewer than 15.
+            
+            Return ONLY a clean JSON array with exactly these fields for each book:
+            [
+                {{
+                    "title": "Specific Book Title",
+                    "url": "https://amazon.com/book-url",
+                    "description": "Detailed description",
+                    "provider": "Publisher Name",
+                    "instructor": "Author Name",
+                    "price": "$XX.XX",
+                    "rating": "4.X/5",
+                    "language": "English",
+                    "level": "{level}"
+                }}
+            ]
+            
+            NO additional text, explanations, or formatting - JUST the JSON array.
             """
             
             print(f"📚 Generating SPECIALIZED book recommendations for: {topic}")
@@ -722,7 +757,7 @@ class EnhancedResourceService:
                 return []
             
             prompt = f"""
-            You are a {topic} career advisor specializing in professional certifications. Recommend ONLY {limit} REAL, EXISTING industry certifications specifically for "{topic}" at {level} level.
+            You are a {topic} career advisor specializing in professional certifications. Recommend EXACTLY 15 REAL, EXISTING industry certifications specifically for "{topic}" at {level} level.
 
             CRITICAL REQUIREMENTS:
             1. Each certification MUST be specifically for "{topic}" - not general IT or computer science
@@ -754,7 +789,24 @@ class EnhancedResourceService:
             FORBIDDEN: Do NOT include generic "IT fundamentals" or "computer literacy" certifications.
             REQUIRED: Every single certification must be specifically about "{topic}" and validate {topic} skills.
             
-            Return as JSON array ONLY with fields: title, url, description, provider, duration, price, rating, instructor, level
+            IMPORTANT: You MUST provide exactly 15 different certifications. Do not provide fewer than 15.
+            
+            Return ONLY a clean JSON array with exactly these fields for each certification:
+            [
+                {{
+                    "title": "Specific Certification Name",
+                    "url": "https://provider.com/certification-url",
+                    "description": "Detailed description",
+                    "provider": "Certification Provider",
+                    "duration": "X months prep",
+                    "price": "$XXX exam fee",
+                    "rating": "Industry Recognition Level",
+                    "instructor": "Certification Provider",
+                    "level": "{level}"
+                }}
+            ]
+            
+            NO additional text, explanations, or formatting - JUST the JSON array.
             """
             
             print(f"🏆 Generating SPECIALIZED certification recommendations for: {topic}")
@@ -788,12 +840,33 @@ class EnhancedResourceService:
     def _parse_gemini_response(self, response_text: str, resource_type: str, topic: str, level: str) -> List[Dict[str, Any]]:
         """Parse Gemini AI response and format as resource data"""
         try:
-            # Extract JSON from response
+            print(f"📄 Parsing Gemini response for {resource_type} (length: {len(response_text)})")
+            
+            # Multiple strategies to extract JSON from response
             import re
+            
+            # Strategy 1: Look for complete JSON array
             json_match = re.search(r'\[.*\]', response_text, re.DOTALL)
+            
+            # Strategy 2: If no array found, look for individual JSON objects
+            if not json_match:
+                json_objects = re.findall(r'\{[^{}]*\}', response_text, re.DOTALL)
+                if json_objects:
+                    # Combine individual objects into an array
+                    json_str = '[' + ','.join(json_objects) + ']'
+                    json_match = type('Match', (), {'group': lambda: json_str})()
+            
             if json_match:
                 json_str = json_match.group()
+                print(f"📊 Extracted JSON string (length: {len(json_str)})")
+                
+                # Clean up common JSON formatting issues
+                json_str = json_str.replace('\n', ' ').replace('\r', ' ')
+                json_str = re.sub(r',\s*}', '}', json_str)  # Remove trailing commas
+                json_str = re.sub(r',\s*]', ']', json_str)  # Remove trailing commas before ]
+                
                 data = json.loads(json_str)
+                print(f"🎯 Successfully parsed {len(data)} items from Gemini response")
                 
                 formatted_resources = []
                 for item in data:
