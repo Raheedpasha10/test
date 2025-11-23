@@ -25,6 +25,8 @@ class Settings:
         "http://127.0.0.1:3002",
         "http://localhost:3005",  # Previous React port
         "http://127.0.0.1:3005",
+        "https://studentcompass-zazg.onrender.com",  # Production domain
+        "*"  # Allow all origins for now (can be restricted later)
     ]
 
     # Google Cloud Configuration

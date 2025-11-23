@@ -1,13 +1,16 @@
 services:
-  # Backend FastAPI Service
+  # Combined Backend + Frontend Service
   - type: web
-    name: student-compass-api
+    name: student-compass
     env: python
     pythonVersion: "3.11"
     buildCommand: |
       cd Generative
       pip install --upgrade pip
       pip install -r requirements.txt
+      cd frontend
+      npm ci
+      npm run build
     startCommand: "cd Generative && python main.py"
     envVars:
       - key: GROQ_API_KEY
@@ -20,21 +23,6 @@ services:
         value: 0.0.0.0
       - key: PORT
         value: $PORT
-    autoDeploy: true
-    
-  # Frontend React Service
-  - type: web
-    name: student-compass-frontend
-    env: static
-    buildCommand: |
-      cd Generative/frontend
-      npm ci
-      npm run build
-    staticPublishPath: ./Generative/frontend/build
-    envVars:
       - key: REACT_APP_API_URL
-        fromService:
-          type: web
-          name: student-compass-api
-          property: host
+        value: https://studentcompass-zazg.onrender.com
     autoDeploy: true

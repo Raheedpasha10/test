@@ -1,6 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from dotenv import load_dotenv
+import os
 
 # Load environment variables
 load_dotenv()
@@ -38,6 +41,35 @@ app.include_router(resources_routes.router)
 app.include_router(multi_agent_roadmap.router)  # NEW: Multi-agent V2 endpoints
 from routes import real_multi_agent
 app.include_router(real_multi_agent.router, prefix="/api/real-multi-agent")
+
+# Mount static files for frontend
+static_dir = os.path.join(os.path.dirname(__file__), "frontend", "build", "static")
+if os.path.exists(static_dir):
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+# Serve React app
+@app.get("/", response_class=FileResponse)
+async def serve_frontend():
+    """Serve the React frontend"""
+    frontend_path = os.path.join(os.path.dirname(__file__), "frontend", "build", "index.html")
+    if os.path.exists(frontend_path):
+        return FileResponse(frontend_path)
+    else:
+        return {"message": "MARGDARSHAK API is running"}
+
+# Catch-all route for React Router
+@app.get("/{full_path:path}", response_class=FileResponse)
+async def serve_frontend_routes(full_path: str):
+    """Serve React app for all frontend routes"""
+    # Don't intercept API routes
+    if full_path.startswith("api/") or full_path.startswith("docs") or full_path.startswith("openapi.json"):
+        return {"error": "Not Found"}
+    
+    frontend_path = os.path.join(os.path.dirname(__file__), "frontend", "build", "index.html")
+    if os.path.exists(frontend_path):
+        return FileResponse(frontend_path)
+    else:
+        return {"message": "MARGDARSHAK API is running"}
 
 if __name__ == "__main__":
     import uvicorn
