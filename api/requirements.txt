@@ -1,4 +1,1 @@
-fastapi==0.104.1
-httpx==0.25.2
-python-multipart==0.0.6
-uvicorn==0.24.0
+# No external dependencies - using Python built-ins only
