@@ -21,8 +21,8 @@ requests==2.31.0
 # Data Processing and Validation
 pydantic==2.5.0
 pydantic-settings==2.1.0
-pandas==2.1.4
-numpy==1.25.2
+# pandas==2.1.4  # Removed to avoid Python 3.13 compatibility issues
+# numpy==1.25.2  # Removed to avoid Python 3.13 compatibility issues
 
 # Environment and Configuration
 python-dotenv==1.0.0
