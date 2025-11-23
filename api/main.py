@@ -6,9 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
 import httpx
-import asyncio
 import json
-from groq import Groq
 
 # Create FastAPI app
 app = FastAPI(title="Student Compass API")
@@ -22,18 +20,39 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize AI clients
-groq_client = None
-google_api_key = None
+# Get API keys
+groq_api_key = os.getenv("GROQ_API_KEY")
+google_api_key = os.getenv("GOOGLE_GENAI_API_KEY")
 
-try:
-    groq_api_key = os.getenv("GROQ_API_KEY")
-    if groq_api_key:
-        groq_client = Groq(api_key=groq_api_key)
+# Lightweight Groq AI function
+async def call_groq_ai(prompt: str) -> str:
+    if not groq_api_key:
+        return None
         
-    google_api_key = os.getenv("GOOGLE_GENAI_API_KEY")
-except Exception as e:
-    print(f"Warning: AI client initialization failed: {e}")
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {groq_api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": "llama-3.1-8b-instant",
+                    "messages": [
+                        {"role": "system", "content": "You are a senior technical career advisor with 15+ years of industry experience."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    "temperature": 0.7,
+                    "max_tokens": 3000
+                }
+            )
+            if response.status_code == 200:
+                data = response.json()
+                return data.get("choices", [{}])[0].get("message", {}).get("content", "")
+    except Exception as e:
+        print(f"Groq AI error: {e}")
+    return None
 
 # Lightweight Google AI function
 async def call_google_ai(prompt: str) -> str:
@@ -63,7 +82,7 @@ async def call_google_ai(prompt: str) -> str:
 async def health_check():
     return {
         "status": "healthy",
-        "groq_available": groq_client is not None,
+        "groq_available": groq_api_key is not None,
         "google_ai_available": google_api_key is not None
     }
 
@@ -80,7 +99,7 @@ async def generate_roadmap(request_data: dict):
         roadmap_results = []
         
         # Agent 1: Groq for technical analysis
-        if groq_client:
+        if groq_api_key:
             try:
                 technical_prompt = f"""As a technical career expert, create a detailed roadmap for: {query}
 
@@ -107,19 +126,10 @@ Format as markdown with this EXACT structure:
 
 Create 4-5 phases with SPECIFIC {query} terminology and real industry requirements."""
 
-                groq_response = groq_client.chat.completions.create(
-                    messages=[
-                        {"role": "system", "content": "You are a senior technical career advisor with 15+ years of industry experience."},
-                        {"role": "user", "content": technical_prompt}
-                    ],
-                    model="llama-3.1-8b-instant",
-                    max_tokens=3000,
-                    temperature=0.7
-                )
-                
-                groq_content = groq_response.choices[0].message.content
-                roadmap_results.append(groq_content)
-                agents_used.append("Technical Analysis Agent")
+                groq_content = await call_groq_ai(technical_prompt)
+                if groq_content:
+                    roadmap_results.append(groq_content)
+                    agents_used.append("Technical Analysis Agent")
                 
             except Exception as e:
                 print(f"Groq agent failed: {e}")
