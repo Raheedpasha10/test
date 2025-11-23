@@ -43,8 +43,12 @@ if __name__ == "__main__":
     import uvicorn
     import os
     
-    # Use PORT environment variable for Render deployment
-    port = int(os.getenv("PORT", settings.PORT))
+    # Use PORT environment variable for Render deployment  
+    port_env = os.getenv("PORT")
+    if port_env and port_env != "$PORT":
+        port = int(port_env)
+    else:
+        port = settings.PORT
     host = os.getenv("HOST", settings.HOST)
     
     print(f"🚀 Starting Student Compass API...")
