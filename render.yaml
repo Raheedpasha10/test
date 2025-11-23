@@ -1,0 +1,40 @@
+services:
+  # Backend FastAPI Service
+  - type: web
+    name: student-compass-api
+    env: python
+    buildCommand: |
+      cd Generative
+      pip install -r requirements.txt
+    startCommand: |
+      cd Generative
+      uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GOOGLE_GENAI_API_KEY
+        sync: false
+      - key: ENVIRONMENT
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: $PORT
+    autoDeploy: true
+    
+  # Frontend React Service
+  - type: web
+    name: student-compass-frontend
+    env: static
+    buildCommand: |
+      cd Generative/frontend
+      npm ci
+      npm run build
+    staticPublishPath: ./Generative/frontend/build
+    envVars:
+      - key: REACT_APP_API_URL
+        fromService:
+          type: web
+          name: student-compass-api
+          property: host
+    autoDeploy: true
