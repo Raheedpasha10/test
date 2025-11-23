@@ -1,2 +1,4 @@
-fastapi
-groq
+fastapi==0.104.0
+groq==0.4.1
+httpx==0.25.2
+pydantic==2.5.0
