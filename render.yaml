@@ -9,13 +9,9 @@ services:
       cd Generative
       pip install --upgrade pip
       pip install -r requirements.txt
-      echo "📦 Installing Node.js dependencies..."
-      cd frontend
-      npm ci
-      echo "🏗️ Building React frontend..."
-      npm run build
-      echo "✅ Build complete!"
-      ls -la build/
+      echo "✅ Python build complete!"
+      echo "📁 Checking if frontend build exists..."
+      ls -la frontend/build/ || echo "No build directory found"
     startCommand: "cd Generative && python main.py"
     envVars:
       - key: GROQ_API_KEY
