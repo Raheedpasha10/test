@@ -1,10 +1,10 @@
-# 🌟 Margdarshan - AI-Powered Career Guidance System
+# 🧭 Student Compass - A Unified Career Navigation System
 
 <div align="center">
 
-![Margdarshan Logo](https://via.placeholder.com/300x100/4F46E5/FFFFFF?text=MARGDARSHAN)
+![Student Compass Logo](https://via.placeholder.com/300x100/4F46E5/FFFFFF?text=STUDENT+COMPASS)
 
-**Intelligent Career Guidance Through Multi-Agent AI**
+**Intelligent Career Navigation Through Multi-Agent AI**
 
 [![GitHub Stars](https://img.shields.io/github/stars/Raheedpasha10/test?style=social)](https://github.com/Raheedpasha10/test/stargazers)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -18,15 +18,15 @@
 
 ---
 
-## 🎯 About Margdarshan
+## 🎯 About Student Compass
 
-**Margdarshan** (Sanskrit: *"Guidance"*) is a revolutionary AI-powered career guidance platform that transforms how students and professionals discover their ideal career paths. Using cutting-edge multi-agent AI technology, we provide personalized, actionable career roadmaps in seconds.
+**Student Compass** is a revolutionary AI-powered career navigation platform that transforms how students and professionals discover their ideal career paths. Using cutting-edge multi-agent AI technology, we provide personalized, actionable career roadmaps in seconds.
 
-### ✨ Why Choose Margdarshan?
+### ✨ Why Choose Student Compass?
 
-🔥 **Instant Results** - Get comprehensive career guidance in under 10 seconds  
+🔥 **Instant Results** - Get comprehensive career navigation in under 10 seconds  
 🎯 **Hyper-Personalized** - AI analyzes your unique profile for tailored recommendations  
-🤖 **Multi-Agent Intelligence** - 5 specialized AI agents work together for superior results  
+🤖 **Multi-Agent Intelligence** - Specialized AI agents work together for superior results  
 📚 **Curated Resources** - Access hand-picked learning materials for every step  
 📱 **Universal Access** - Works flawlessly on desktop, tablet, and mobile  
 
@@ -91,8 +91,8 @@ graph TD
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
 
 ### AI & ML
-![OpenAI](https://img.shields.io/badge/OpenAI-412991.svg?style=for-the-badge&logo=openai&logoColor=white)
-![LangChain](https://img.shields.io/badge/LangChain-FF6B6B?style=for-the-badge&logo=chainlink&logoColor=white)
+![Groq](https://img.shields.io/badge/Groq-FF6B6B?style=for-the-badge&logo=ai&logoColor=white)
+![Google AI](https://img.shields.io/badge/Google%20AI-4285F4?style=for-the-badge&logo=google&logoColor=white)
 
 ### Deployment
 ![Vercel](https://img.shields.io/badge/vercel-%23000000.svg?style=for-the-badge&logo=vercel&logoColor=white)
@@ -106,7 +106,7 @@ graph TD
 ## 📁 Project Structure
 
 ```
-📦 margdarshan/
+📦 student-compass/
 ├── 🎨 Generative/frontend/          # React Frontend Application
 │   ├── src/components/              # Reusable UI Components
 │   ├── src/pages/                   # Main Application Pages
@@ -117,7 +117,9 @@ graph TD
 │   ├── services/                    # Business Logic
 │   ├── services/agents/             # AI Agent Implementations
 │   └── models/                      # Data Models
-├── 🤖 Multi-Agent implementation/   # AI System Documentation
+├── 🚀 api/                          # Vercel Serverless Functions
+│   ├── main.py                      # API Entry Point
+│   └── requirements.txt             # Python Dependencies
 ├── 📊 preparation/                  # Team Presentation Materials
 ├── 📸 screenshots/                  # Project Screenshots
 └── 📚 docs/                         # Additional Documentation
@@ -130,8 +132,8 @@ graph TD
 ### Prerequisites
 - 🐍 Python 3.9+
 - 📦 Node.js 16+
-- 🔑 OpenAI API Key
-- 🧠 Anthropic API Key (optional)
+- 🔑 Groq API Key
+- 🧠 Google AI API Key
 
 ### Installation Steps
 
@@ -169,11 +171,7 @@ Create `Generative/.env`:
 ```bash
 # 🔑 Required API Keys
 GROQ_API_KEY=your_groq_api_key_here
-OPENAI_API_KEY=your_openai_api_key_here
-
-# 🎛️ Optional Services  
 GOOGLE_GENAI_API_KEY=your_google_api_key_here
-HUGGINGFACE_API_TOKEN=your_huggingface_token_here
 
 # 🌐 Application Settings
 ENVIRONMENT=development
@@ -339,11 +337,11 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 ## 🙏 Acknowledgments
 
 Special thanks to:
-- 🤖 **OpenAI** for GPT-4 API access
-- 🧠 **Anthropic** for Claude AI capabilities  
+- 🤖 **Groq** for high-performance AI inference
+- 🧠 **Google AI** for Gemini API capabilities  
 - ⚛️ **React & FastAPI** communities for excellent frameworks
 - 🎨 **Tailwind CSS** for beautiful, responsive design
-- 🚀 **Vercel & Railway** for seamless deployment
+- 🚀 **Vercel** for seamless deployment and hosting
 - 👥 **Beta testers** and early adopters
 - 🏫 **Educational institutions** providing feedback
 
@@ -353,12 +351,12 @@ Special thanks to:
 
 <div align="center">
 
-[![Email](https://img.shields.io/badge/Email-support@margdarshan.ai-blue?style=for-the-badge&logo=gmail)](mailto:support@margdarshan.ai)
-[![Discord](https://img.shields.io/badge/Discord-Join%20Community-7289da?style=for-the-badge&logo=discord)](https://discord.gg/margdarshan)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Follow%20Us-0077b5?style=for-the-badge&logo=linkedin)](https://linkedin.com/company/margdarshan)
-[![Twitter](https://img.shields.io/badge/Twitter-Follow%20Updates-1da1f2?style=for-the-badge&logo=twitter)](https://twitter.com/margdarshan_ai)
+[![Email](https://img.shields.io/badge/Email-support@studentcompass.ai-blue?style=for-the-badge&logo=gmail)](mailto:support@studentcompass.ai)
+[![Discord](https://img.shields.io/badge/Discord-Join%20Community-7289da?style=for-the-badge&logo=discord)](https://discord.gg/studentcompass)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Follow%20Us-0077b5?style=for-the-badge&logo=linkedin)](https://linkedin.com/company/studentcompass)
+[![Twitter](https://img.shields.io/badge/Twitter-Follow%20Updates-1da1f2?style=for-the-badge&logo=twitter)](https://twitter.com/student_compass)
 
-**Need Help?** Join our [Discord community](https://discord.gg/margdarshan) or email us at [support@margdarshan.ai](mailto:support@margdarshan.ai)
+**Need Help?** Join our [Discord community](https://discord.gg/studentcompass) or email us at [support@studentcompass.ai](mailto:support@studentcompass.ai)
 
 </div>
 
@@ -372,9 +370,9 @@ Special thanks to:
 
 ---
 
-**Made with ❤️ by the Margdarshan Team**
+**Made with ❤️ by the Student Compass Team**
 
-*Empowering careers through intelligent guidance*
+*Empowering careers through intelligent navigation*
 
 [![Built with Love](https://forthebadge.com/images/badges/built-with-love.svg)](https://github.com/Raheedpasha10/test)
 [![Powered by AI](https://forthebadge.com/images/badges/powered-by-electricity.svg)](https://github.com/Raheedpasha10/test)
