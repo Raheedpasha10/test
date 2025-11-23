@@ -2,11 +2,11 @@
 Simple Vercel API Entry Point for Margdarshan Backend
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 import os
-import httpx
 import json
+import httpx
 
 # Create FastAPI app
 app = FastAPI(title="Student Compass API")
@@ -20,12 +20,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Get API keys
+# Get API keys from environment
 groq_api_key = os.getenv("GROQ_API_KEY")
 google_api_key = os.getenv("GOOGLE_GENAI_API_KEY")
 
 # Lightweight Groq AI function
 async def call_groq_ai(prompt: str) -> str:
+    """Call Groq AI API"""
     if not groq_api_key:
         return None
         
@@ -45,7 +46,8 @@ async def call_groq_ai(prompt: str) -> str:
                     ],
                     "temperature": 0.7,
                     "max_tokens": 3000
-                }
+                },
+                timeout=30.0
             )
             if response.status_code == 200:
                 data = response.json()
@@ -54,32 +56,9 @@ async def call_groq_ai(prompt: str) -> str:
         print(f"Groq AI error: {e}")
     return None
 
-# Lightweight Google AI function
-async def call_google_ai(prompt: str) -> str:
-    if not google_api_key:
-        return None
-        
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={google_api_key}",
-                json={
-                    "contents": [{"parts": [{"text": prompt}]}],
-                    "generationConfig": {
-                        "temperature": 0.7,
-                        "maxOutputTokens": 2000
-                    }
-                }
-            )
-            if response.status_code == 200:
-                data = response.json()
-                return data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
-    except Exception as e:
-        print(f"Google AI error: {e}")
-    return None
-
 @app.get("/api/health")
 async def health_check():
+    """Health check endpoint"""
     return {
         "status": "healthy",
         "groq_available": groq_api_key is not None,
@@ -87,21 +66,87 @@ async def health_check():
     }
 
 @app.post("/api/multi-agent-roadmap")
-async def generate_roadmap(request_data: dict):
+async def generate_roadmap(request: Request):
+    """Generate multi-agent roadmap"""
     try:
+        request_data = await request.json()
         query = request_data.get("query", "")
         
-        if not groq_client and not google_api_key:
-            return {"error": "AI services not available"}
+        if not groq_api_key:
+            # Fallback roadmap
+            fallback_roadmap = f"""# {query} Learning Roadmap
+
+## Phase 1: Foundation (4-6 weeks)
+### Goals
+- Master fundamental concepts for {query}
+- Build basic skills and understanding
+- Establish strong learning foundation
+
+### Topics
+- Core principles and concepts
+- Essential tools and technologies
+- Best practices and methodologies
+
+### Projects
+- Beginner-friendly project
+- Hands-on practice exercises
+
+### Tools
+- Industry-standard tools
+- Learning platforms and resources
+
+## Phase 2: Development (6-8 weeks)
+### Goals
+- Apply knowledge in practical scenarios
+- Build intermediate-level skills
+- Create portfolio projects
+
+### Topics
+- Advanced concepts and techniques
+- Real-world applications
+- Problem-solving approaches
+
+### Projects
+- Intermediate project development
+- Portfolio building
+
+### Tools
+- Professional development tools
+- Advanced frameworks
+
+## Phase 3: Professional Application (8-10 weeks)
+### Goals
+- Develop professional-level competency
+- Build advanced projects
+- Prepare for job market
+
+### Topics
+- Advanced {query} concepts
+- Industry best practices
+- Professional development
+
+### Projects
+- Advanced portfolio projects
+- Real-world applications
+
+### Tools
+- Professional-grade tools
+- Industry-standard platforms"""
+
+            return {
+                "final_roadmap": fallback_roadmap,
+                "agent_insights": [],
+                "metadata": {
+                    "query": query,
+                    "num_agents": 0,
+                    "successful_agents": 0,
+                    "error": "AI service not available - using fallback",
+                    "fallback": True
+                }
+            }
         
-        # Multi-agent approach: Use both AI services for better results
-        agents_used = []
-        roadmap_results = []
-        
-        # Agent 1: Groq for technical analysis
-        if groq_api_key:
-            try:
-                technical_prompt = f"""As a technical career expert, create a detailed roadmap for: {query}
+        # Create technical roadmap prompt
+        technical_prompt = f"""As a technical career expert, create a detailed roadmap for: {query}
 
 Format as markdown with this EXACT structure:
 
@@ -126,73 +171,75 @@ Format as markdown with this EXACT structure:
 
 Create 4-5 phases with SPECIFIC {query} terminology and real industry requirements."""
 
-                groq_content = await call_groq_ai(technical_prompt)
-                if groq_content:
-                    roadmap_results.append(groq_content)
-                    agents_used.append("Technical Analysis Agent")
-                
-            except Exception as e:
-                print(f"Groq agent failed: {e}")
+        # Call Groq AI
+        groq_content = await call_groq_ai(technical_prompt)
         
-        # Agent 2: Google AI for market insights
-        if google_api_key:
-            try:
-                market_prompt = f"""As a market research expert, enhance this {query} roadmap with current industry trends and market insights.
-
-Provide the same markdown structure but focus on:
-- Current market demands for {query}
-- Emerging technologies and trends
-- Industry-specific certifications
-- Real job market requirements
-- Salary progression expectations
-
-Format exactly as:
-## Phase 1: [Phase Name] (duration)
-### Goals
-- [Market-relevant goal 1]
-- [Market-relevant goal 2]
-
-Continue for 4-5 phases with real market insights."""
-
-                google_content = await call_google_ai(market_prompt)
-                if google_content:
-                    roadmap_results.append(google_content)
-                    agents_used.append("Market Research Agent")
-                    
-            except Exception as e:
-                print(f"Google AI agent failed: {e}")
-        
-        # Combine results or use best available
-        if roadmap_results:
-            # Use the most comprehensive roadmap (usually the first/longest one)
-            final_roadmap = max(roadmap_results, key=len)
-            
+        if groq_content:
             return {
-                "final_roadmap": final_roadmap,
-                "agent_insights": [
-                    {
-                        "agent_name": agent,
-                        "contribution": "Generated specialized roadmap content",
-                        "confidence": 0.85
-                    } for agent in agents_used
-                ],
+                "final_roadmap": groq_content,
+                "agent_insights": [{
+                    "agent_name": "Technical Analysis Agent",
+                    "contribution": "Generated specialized roadmap content",
+                    "confidence": 0.85
+                }],
                 "metadata": {
                     "query": query,
-                    "num_agents": len(agents_used),
-                    "successful_agents": len(roadmap_results),
-                    "agents_used": agents_used
+                    "num_agents": 1,
+                    "successful_agents": 1,
+                    "agents_used": ["Technical Analysis Agent"]
                 }
             }
         else:
-            # Fallback response
+            # Fallback if AI call fails
+            fallback_roadmap = f"""# {query} Learning Roadmap
+
+## Phase 1: Foundation (4-6 weeks)
+### Goals
+- Learn fundamental {query} concepts
+- Set up development environment
+- Complete first practice projects
+
+### Topics
+- Basic {query} principles
+- Core tools and technologies
+- Development best practices
+
+### Projects
+- Hello World application
+- Basic project implementation
+
+### Tools
+- Code editor/IDE
+- Version control (Git)
+
+## Phase 2: Development (6-8 weeks)
+### Goals
+- Build intermediate {query} skills
+- Create portfolio projects
+- Learn advanced concepts
+
+### Topics
+- Advanced {query} features
+- Framework knowledge
+- Testing and debugging
+
+### Projects
+- Portfolio project 1
+- Technical challenge completion
+
+### Tools
+- Framework tools
+- Testing frameworks"""
+
             return {
-                "final_roadmap": f"# {query} Learning Roadmap\n\n## Phase 1: Foundation\n- Start with basic concepts\n- Build fundamental skills\n\n## Phase 2: Practice\n- Apply knowledge in projects\n- Gain hands-on experience",
+                "final_roadmap": fallback_roadmap,
                 "agent_insights": [],
                 "metadata": {
                     "query": query,
                     "num_agents": 0,
                     "successful_agents": 0,
-                    "error": "All AI agents unavailable"
+                    "error": "AI generation failed - using fallback",
+                    "fallback": True
                 }
             }
         
@@ -201,6 +248,3 @@ Continue for 4-5 phases with real market insights."""
             "error": f"Multi-agent roadmap generation failed: {str(e)}",
             "final_roadmap": f"# {query} Learning Path\n\nRoadmap generation temporarily unavailable."
         }
-
-# Export app for Vercel
-app = app
