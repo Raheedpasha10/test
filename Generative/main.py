@@ -52,9 +52,9 @@ if __name__ == "__main__":
     host = os.getenv("HOST", settings.HOST)
     
     print(f"🚀 Starting Student Compass API...")
-    print(f"📍 Environment: {settings.ENVIRONMENT}")
+    print(f"📍 Environment: {getattr(settings, 'ENVIRONMENT', 'production')}")
     print(f"🌐 Host: {host}")
     print(f"🔌 Port: {port}")
-    print(f"🔑 Groq API: {'✅ Configured' if settings.GROQ_API_KEY else '❌ Missing'}")
+    print(f"🔑 Groq API: {'✅ Configured' if getattr(settings, 'GROQ_API_KEY', None) else '❌ Missing'}")
     
     uvicorn.run(app, host=host, port=port)
