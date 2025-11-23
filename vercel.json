@@ -1,33 +1,17 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "Generative/frontend/package.json", 
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "build"
-      }
-    },
-    {
-      "src": "api/main.py",
-      "use": "@vercel/python",
-      "config": {
-        "maxDuration": 30
-      }
+  "buildCommand": "cd Generative/frontend && npm run build",
+  "outputDirectory": "Generative/frontend/build",
+  "framework": "create-react-app",
+  "functions": {
+    "api/main.py": {
+      "runtime": "python3.9"
     }
-  ],
+  },
   "routes": [
     {
       "src": "/api/(.*)",
       "dest": "/api/main.py"
-    },
-    {
-      "src": "/static/(.*)",
-      "dest": "/static/$1"
-    },
-    {
-      "src": "/(.*\\.(js|css|ico|png|jpg|jpeg|gif|svg|json|txt|woff|woff2|ttf|eot))",
-      "dest": "/$1"
     },
     {
       "src": "/(.*)",
