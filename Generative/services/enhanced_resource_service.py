@@ -575,88 +575,211 @@ class EnhancedResourceService:
             return "N/A"
     
     def _get_course_recommendations(self, topic: str, limit: int, level: str) -> List[Dict[str, Any]]:
-        """Get course recommendations using Gemini AI"""
+        """Get course recommendations using Gemini AI with specialization-specific prompts"""
         try:
             if not self.model:
                 return []
             
+            # Create highly specific prompt based on the topic
             prompt = f"""
-            Recommend {limit} high-quality online courses for learning {topic} at {level} level.
-            For each course, provide:
-            - Title
-            - Platform (Coursera, Udemy, edX, Pluralsight, etc.)
-            - Direct URL to the course
-            - Description (50-100 words)
-            - Instructor name
-            - Duration
-            - Price range
-            - Rating
+            You are an expert in {topic} education. Recommend ONLY {limit} REAL, EXISTING online courses specifically for "{topic}" at {level} level.
+
+            CRITICAL REQUIREMENTS:
+            1. Each course MUST be specifically about "{topic}" - not general programming or generic skills
+            2. Include ONLY actual course titles that exist on the platforms
+            3. Provide REAL instructor names who actually teach these courses
+            4. Each course must be different and specialized for "{topic}"
             
-            Focus on popular, well-reviewed courses with direct enrollment links.
-            Format as JSON array with these exact fields: title, url, description, provider, instructor, duration, price, rating, students, level.
+            SPECIALIZATION FOCUS for "{topic}":
+            - If Data Science: Focus on pandas, matplotlib, sklearn, tensorflow specific courses
+            - If Cybersecurity: Focus on ethical hacking, penetration testing, network security courses
+            - If Web Development: Focus on React, Node.js, full-stack specific courses
+            - If Mobile Development: Focus on React Native, Flutter, iOS/Android specific courses
+            - If UI/UX Design: Focus on Figma, user research, prototyping specific courses
+            - If DevOps: Focus on Docker, Kubernetes, CI/CD specific courses
+            - If Game Development: Focus on Unity, Unreal Engine, C# game programming courses
+            - If Machine Learning: Focus on neural networks, deep learning, AI algorithms courses
+            
+            For each "{topic}" course, provide:
+            - Title: (Must contain "{topic}" or related specific technology)
+            - Platform: (Coursera, Udemy, edX, Pluralsight, LinkedIn Learning)
+            - URL: (Direct link to the specific course)
+            - Description: (50-100 words about {topic} specifically)
+            - Instructor: (Real instructor name who teaches {topic})
+            - Duration: (Course length)
+            - Price: (Actual course price)
+            - Rating: (4.0-5.0 range)
+            - Students: (Enrollment numbers)
+            
+            FORBIDDEN: Do NOT include generic "programming basics" or "computer science fundamentals" courses.
+            REQUIRED: Every single course must be specifically about "{topic}" and use {topic}-specific terminology.
+            
+            Return as JSON array ONLY with fields: title, url, description, provider, instructor, duration, price, rating, students, level
             """
             
+            print(f"🎓 Generating SPECIALIZED course recommendations for: {topic}")
             response = self.model.generate_content(prompt)
             courses_data = self._parse_gemini_response(response.text, "courses", topic, level)
-            return courses_data[:limit]
+            
+            # Validate that courses are topic-specific
+            filtered_courses = []
+            topic_keywords = topic.lower().split()
+            
+            for course in courses_data:
+                course_title = course.get('title', '').lower()
+                course_desc = course.get('description', '').lower()
+                
+                # Check if course contains topic-specific terms
+                is_relevant = any(keyword in course_title or keyword in course_desc 
+                                for keyword in topic_keywords)
+                
+                if is_relevant:
+                    filtered_courses.append(course)
+                    print(f"✅ Relevant course: {course.get('title', '')}")
+                else:
+                    print(f"❌ Generic course filtered out: {course.get('title', '')}")
+            
+            return filtered_courses[:limit]
             
         except Exception as e:
             print(f"Gemini course recommendation error: {e}")
             return []
     
     def _get_book_recommendations(self, topic: str, limit: int, level: str) -> List[Dict[str, Any]]:
-        """Get book recommendations using Gemini AI"""
+        """Get book recommendations using Gemini AI with specialization-specific prompts"""
         try:
             if not self.model:
                 return []
             
             prompt = f"""
-            Recommend {limit} excellent books for learning {topic} at {level} level.
-            For each book, provide:
-            - Title
-            - Author
-            - Direct Amazon/publisher URL
-            - Description (50-100 words)
-            - Publisher
-            - Price range
-            - Rating
+            You are a {topic} expert librarian. Recommend ONLY {limit} REAL, EXISTING books specifically for "{topic}" at {level} level.
+
+            CRITICAL REQUIREMENTS:
+            1. Each book MUST be specifically about "{topic}" - not general programming or computer science
+            2. Include ONLY actual book titles that exist and can be purchased
+            3. Provide REAL author names who have written {topic} books
+            4. Each book must be different and specialized for "{topic}"
             
-            Focus on highly-rated, recent books with direct purchase links.
-            Format as JSON array with these exact fields: title, url, description, provider, instructor, price, rating, language, level.
+            SPECIALIZATION FOCUS for "{topic}":
+            - If Data Science: Focus on pandas, scikit-learn, data analysis, visualization books
+            - If Cybersecurity: Focus on ethical hacking, network security, penetration testing books
+            - If Web Development: Focus on React, JavaScript, Node.js, full-stack development books
+            - If Mobile Development: Focus on React Native, Flutter, iOS Swift, Android Kotlin books
+            - If UI/UX Design: Focus on design systems, user research, Figma, prototyping books
+            - If DevOps: Focus on Docker, Kubernetes, CI/CD, infrastructure automation books
+            - If Game Development: Focus on Unity, Unreal Engine, game design, C# game programming books
+            - If Machine Learning: Focus on neural networks, deep learning, TensorFlow, PyTorch books
+            - If Blockchain: Focus on smart contracts, Solidity, cryptocurrency, DeFi books
+            
+            For each "{topic}" book, provide:
+            - Title: (Must contain "{topic}" or related specific technology)
+            - Author: (Real author name who has written about {topic})
+            - Publisher: (O'Reilly, Manning, Packt, Apress, etc.)
+            - URL: (Amazon or publisher direct link)
+            - Description: (50-100 words about {topic} specifically)
+            - Price: (Book price range)
+            - Rating: (4.0-5.0 range)
+            - Publication year: (Recent books preferred)
+            
+            FORBIDDEN: Do NOT include generic "programming fundamentals" or "computer science basics" books.
+            REQUIRED: Every single book must be specifically about "{topic}" and use {topic}-specific terminology.
+            
+            Return as JSON array ONLY with fields: title, url, description, provider, instructor, price, rating, language, level
             """
             
+            print(f"📚 Generating SPECIALIZED book recommendations for: {topic}")
             response = self.model.generate_content(prompt)
             books_data = self._parse_gemini_response(response.text, "books", topic, level)
-            return books_data[:limit]
+            
+            # Validate that books are topic-specific
+            filtered_books = []
+            topic_keywords = topic.lower().split()
+            
+            for book in books_data:
+                book_title = book.get('title', '').lower()
+                book_desc = book.get('description', '').lower()
+                
+                # Check if book contains topic-specific terms
+                is_relevant = any(keyword in book_title or keyword in book_desc 
+                                for keyword in topic_keywords)
+                
+                if is_relevant:
+                    filtered_books.append(book)
+                    print(f"✅ Relevant book: {book.get('title', '')}")
+                else:
+                    print(f"❌ Generic book filtered out: {book.get('title', '')}")
+            
+            return filtered_books[:limit]
             
         except Exception as e:
             print(f"Gemini book recommendation error: {e}")
             return []
     
     def _get_certification_recommendations(self, topic: str, limit: int, level: str) -> List[Dict[str, Any]]:
-        """Get certification recommendations using Gemini AI"""
+        """Get certification recommendations using Gemini AI with specialization-specific prompts"""
         try:
             if not self.model:
                 return []
             
             prompt = f"""
-            Recommend {limit} industry-recognized certifications for {topic} at {level} level.
-            For each certification, provide:
-            - Certification name
-            - Issuing organization (Google, Microsoft, AWS, IBM, etc.)
-            - Direct URL to certification page
-            - Description (50-100 words)
-            - Preparation time
-            - Exam cost
-            - Industry value/recognition
+            You are a {topic} career advisor specializing in professional certifications. Recommend ONLY {limit} REAL, EXISTING industry certifications specifically for "{topic}" at {level} level.
+
+            CRITICAL REQUIREMENTS:
+            1. Each certification MUST be specifically for "{topic}" - not general IT or computer science
+            2. Include ONLY actual certifications that exist and can be taken
+            3. Provide REAL certification names and issuing organizations
+            4. Each certification must be different and specialized for "{topic}"
             
-            Focus on well-known, valuable certifications with direct registration links.
-            Format as JSON array with these exact fields: title, url, description, provider, duration, price, rating, instructor, level.
+            SPECIALIZATION FOCUS for "{topic}":
+            - If Data Science: Focus on Google Data Analytics, IBM Data Science, Microsoft Azure Data Scientist certifications
+            - If Cybersecurity: Focus on CISSP, CEH, CompTIA Security+, OSCP, CISM certifications
+            - If Web Development: Focus on Google Mobile Web Specialist, AWS Certified Developer, Microsoft Azure Developer certifications
+            - If Mobile Development: Focus on Google Associate Android Developer, Apple iOS Developer, Meta React Native certifications
+            - If UI/UX Design: Focus on Google UX Design, Adobe Certified Expert, Nielsen Norman Group UX certifications
+            - If DevOps: Focus on AWS DevOps Engineer, Docker Certified Associate, Kubernetes Administrator certifications
+            - If Game Development: Focus on Unity Certified Developer, Unreal Engine certifications
+            - If Machine Learning: Focus on Google ML Engineer, AWS ML Specialty, TensorFlow Developer certifications
+            - If Cloud Computing: Focus on AWS Solutions Architect, Microsoft Azure Architect, Google Cloud Engineer certifications
+            
+            For each "{topic}" certification, provide:
+            - Title: (Must contain "{topic}" or related specific technology)
+            - Provider: (Google, Microsoft, AWS, CompTIA, IBM, Oracle, Cisco, etc.)
+            - URL: (Direct link to certification page)
+            - Description: (50-100 words about {topic} certification specifically)
+            - Duration: (Preparation time needed)
+            - Price: (Exam cost)
+            - Rating: (Industry recognition level)
+            - Level: (Associate, Professional, Expert, etc.)
+            
+            FORBIDDEN: Do NOT include generic "IT fundamentals" or "computer literacy" certifications.
+            REQUIRED: Every single certification must be specifically about "{topic}" and validate {topic} skills.
+            
+            Return as JSON array ONLY with fields: title, url, description, provider, duration, price, rating, instructor, level
             """
             
+            print(f"🏆 Generating SPECIALIZED certification recommendations for: {topic}")
             response = self.model.generate_content(prompt)
             cert_data = self._parse_gemini_response(response.text, "certifications", topic, level)
-            return cert_data[:limit]
+            
+            # Validate that certifications are topic-specific
+            filtered_certs = []
+            topic_keywords = topic.lower().split()
+            
+            for cert in cert_data:
+                cert_title = cert.get('title', '').lower()
+                cert_desc = cert.get('description', '').lower()
+                
+                # Check if certification contains topic-specific terms
+                is_relevant = any(keyword in cert_title or keyword in cert_desc 
+                                for keyword in topic_keywords)
+                
+                if is_relevant:
+                    filtered_certs.append(cert)
+                    print(f"✅ Relevant certification: {cert.get('title', '')}")
+                else:
+                    print(f"❌ Generic certification filtered out: {cert.get('title', '')}")
+            
+            return filtered_certs[:limit]
             
         except Exception as e:
             print(f"Gemini certification recommendation error: {e}")
