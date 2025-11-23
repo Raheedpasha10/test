@@ -1,126 +1,96 @@
-const https = require('https');
-
-module.exports = async function handler(req, res) {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.setHeader('Content-Type', 'application/json');
-
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return res.status(200).json({ message: 'OK' });
+export default async function handler(request, response) {
+  response.setHeader('Access-Control-Allow-Origin', '*');
+  response.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  
+  if (request.method === 'OPTIONS') {
+    return response.status(200).end();
   }
-
-  // Only handle POST requests
-  if (req.method !== 'POST') {
-    return res.status(404).json({ error: 'Not Found' });
+  
+  if (request.method !== 'POST') {
+    return response.status(405).json({ error: 'Method not allowed' });
   }
-
+  
   try {
-    const { query } = req.body || {};
-    const roadmap = await getRoadmap(query || 'web development');
+    const { query } = request.body || {};
+    const roadmapContent = await generateRoadmap(query || 'web development');
     
-    return res.status(200).json({
-      final_roadmap: roadmap,
-      agent_insights: [{ 
-        agent_name: 'Technical Analysis Agent', 
+    return response.status(200).json({
+      final_roadmap: roadmapContent,
+      agent_insights: [{
+        agent_name: 'Technical Analysis Agent',
         contribution: 'Generated specialized roadmap content',
-        confidence: 0.85 
+        confidence: 0.85
       }],
       metadata: {
-        query: query,
+        query: query || 'web development',
         num_agents: 1,
         successful_agents: 1,
         agents_used: ['Technical Analysis Agent']
       }
     });
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return response.status(500).json({ error: error.message });
   }
 }
 
-async function getRoadmap(query) {
+async function generateRoadmap(query) {
   const groqKey = process.env.GROQ_API_KEY;
   
   if (groqKey) {
     try {
-      const prompt = `As a technical career expert, create a detailed roadmap for: ${query}
+      const prompt = `Create a comprehensive learning roadmap for: ${query}
 
-Format as markdown with this EXACT structure:
+Structure it as:
 
 ## Phase 1: Foundation (4-6 weeks)
 ### Goals
-- [Specific technical goal 1]
-- [Specific technical goal 2]
-- [Specific technical goal 3]
+- Master fundamental concepts
+- Set up development environment
+- Build first projects
 
 ### Topics
-- [Technical topic 1]
-- [Technical topic 2]
-- [Technical topic 3]
+- Core principles
+- Essential tools
+- Best practices
 
-### Projects
-- [Hands-on project 1]
-- [Hands-on project 2]
+### Projects  
+- Beginner project
+- Practice exercises
 
 ### Tools
-- [Industry tool 1]
-- [Industry tool 2]
+- Development tools
+- Learning resources
 
-Create 4-5 phases with SPECIFIC ${query} terminology and real industry requirements.`;
+Create 4 detailed phases with specific skills, projects, and tools.`;
 
-      const data = JSON.stringify({
-        model: "llama-3.1-8b-instant",
-        messages: [
-          { role: "system", content: "You are a senior technical career advisor with 15+ years of industry experience." },
-          { role: "user", content: prompt }
-        ],
-        temperature: 0.7,
-        max_tokens: 3000
+      const apiResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${groqKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'llama-3.1-8b-instant',
+          messages: [
+            { role: 'system', content: 'You are a senior career advisor with 15+ years of experience.' },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.7,
+          max_tokens: 3000
+        })
       });
 
-      const result = await makeGroqRequest(data, groqKey);
-      return result.choices?.[0]?.message?.content || getFallbackRoadmap(query);
+      if (apiResponse.ok) {
+        const result = await apiResponse.json();
+        return result.choices?.[0]?.message?.content || getFallbackRoadmap(query);
+      }
     } catch (error) {
-      console.error('Groq AI error:', error);
+      console.error('Groq API error:', error);
     }
   }
   
   return getFallbackRoadmap(query);
-}
-
-function makeGroqRequest(data, apiKey) {
-  return new Promise((resolve, reject) => {
-    const options = {
-      hostname: 'api.groq.com',
-      path: '/openai/v1/chat/completions',
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'Content-Length': data.length
-      },
-      timeout: 25000
-    };
-
-    const req = https.request(options, (res) => {
-      let body = '';
-      res.on('data', (chunk) => body += chunk);
-      res.on('end', () => {
-        try {
-          resolve(JSON.parse(body));
-        } catch (e) {
-          reject(e);
-        }
-      });
-    });
-
-    req.on('error', reject);
-    req.on('timeout', () => reject(new Error('Request timeout')));
-    req.write(data);
-    req.end();
-  });
 }
 
 function getFallbackRoadmap(query) {
@@ -130,16 +100,16 @@ function getFallbackRoadmap(query) {
 ### Goals
 - Master fundamental ${query} concepts
 - Set up development environment
-- Complete basic projects
+- Complete first projects
 
 ### Topics
 - Core ${query} principles
 - Essential tools and technologies
-- Best practices and methodologies
+- Development best practices
 
 ### Projects
-- Hello World project
-- Basic portfolio website
+- Hello World application
+- Basic portfolio project
 
 ### Tools
 - Code editor (VS Code)
@@ -149,62 +119,56 @@ function getFallbackRoadmap(query) {
 ### Goals
 - Build intermediate skills
 - Create portfolio projects
-- Learn popular frameworks
+- Learn frameworks
 
 ### Topics
 - Advanced ${query} concepts
-- Popular frameworks and libraries
+- Popular frameworks
 - Testing and debugging
 
 ### Projects
-- Interactive web application
-- API integration project
+- Web application project
+- API integration
 
 ### Tools
-- Framework-specific tools
+- Framework tools
 - Testing frameworks
-- Browser dev tools
 
 ## Phase 3: Advanced (8-10 weeks)
 ### Goals
 - Master advanced concepts
 - Build complex applications
-- Learn deployment strategies
+- Learn deployment
 
 ### Topics
 - Performance optimization
-- Security best practices
+- Security practices
 - Database integration
-- Deployment and hosting
 
 ### Projects
 - Full-stack application
-- Database-driven project
+- Production deployment
 
 ### Tools
-- Cloud platforms (AWS/Vercel/Netlify)
-- Database tools
+- Cloud platforms
 - Monitoring tools
 
 ## Phase 4: Professional (10-12 weeks)
 ### Goals
 - Prepare for job market
 - Build professional portfolio
-- Network with industry professionals
+- Network professionally
 
 ### Topics
 - Industry best practices
-- Code review processes
-- Agile methodologies
 - Interview preparation
+- Professional development
 
 ### Projects
 - Capstone project
-- Open source contributions
-- Professional portfolio site
+- Open source contribution
 
 ### Tools
-- Professional networking platforms
-- Portfolio hosting
-- Collaboration tools`;
+- Professional platforms
+- Portfolio hosting`;
 }
