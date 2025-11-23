@@ -2,21 +2,21 @@
   "version": 2,
   "builds": [
     {
-      "src": "Generative/frontend/package.json",
+      "src": "Generative/frontend/package.json", 
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "../../"
+        "distDir": "build"
       }
     },
     {
-      "src": "api/**/*.py",
+      "src": "api/main.py",
       "use": "@vercel/python"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/api/index.py"
+      "dest": "/api/main.py"
     },
     {
       "src": "/static/(.*)",
@@ -30,5 +30,15 @@
       "src": "/(.*)",
       "dest": "/index.html"
     }
-  ]
+  ],
+  "env": {
+    "GROQ_API_KEY": "@groq_api_key",
+    "GOOGLE_GENAI_API_KEY": "@google_genai_api_key",
+    "ENVIRONMENT": "production"
+  },
+  "functions": {
+    "api/main.py": {
+      "maxDuration": 30
+    }
+  }
 }

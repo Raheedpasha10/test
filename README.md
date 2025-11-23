@@ -12,7 +12,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100.x-green?logo=fastapi)](https://fastapi.tiangolo.com/)
 [![Python](https://img.shields.io/badge/Python-3.9+-blue?logo=python)](https://python.org/)
 
-[🚀 Live Demo](https://margdarshan.vercel.app) · [📖 Documentation](docs/) · [🐛 Report Bug](issues/) · [💡 Request Feature](issues/)
+[🚀 Deploy to Vercel](#deployment) · [📖 Documentation](#documentation) · [🐛 Report Bug](issues/) · [💡 Request Feature](issues/)
 
 </div>
 

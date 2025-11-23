@@ -108,3 +108,6 @@ Generative/.env
 Generative/.env
 **/.env
 .env
+
+# Old git folder with sensitive data
+.git_old/
