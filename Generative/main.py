@@ -29,19 +29,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
-app.include_router(auth.router)
-app.include_router(health.router)
-app.include_router(analyze.router)
-app.include_router(mock_test.router)
-app.include_router(update_skills.router)
-app.include_router(ai_search.router)
-app.include_router(agents.router)
-app.include_router(resources_routes.router)
-app.include_router(multi_agent_roadmap.router)  # NEW: Multi-agent V2 endpoints
-from routes import real_multi_agent
-app.include_router(real_multi_agent.router, prefix="/api/real-multi-agent")
-
 # Check if frontend build exists
 build_dir = os.path.join(os.path.dirname(__file__), "frontend", "build")
 static_dir = os.path.join(build_dir, "static")
@@ -54,6 +41,19 @@ print(f"📁 Static directory exists: {os.path.exists(static_dir)}")
 if os.path.exists(static_dir):
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
     print("✅ Mounted static files at /static")
+
+# Include API routers BEFORE frontend routes (keep existing prefixes)
+app.include_router(auth.router)  # has prefix="/auth"
+app.include_router(mock_test.router)  # has prefix="/mock-test"
+app.include_router(agents.router)  # has prefix="/agents" 
+app.include_router(resources_routes.router)  # has prefix="/resources"
+app.include_router(health.router, prefix="/api")  # avoid conflict with frontend route
+app.include_router(analyze.router)
+app.include_router(update_skills.router)
+app.include_router(ai_search.router)
+app.include_router(multi_agent_roadmap.router)
+from routes import real_multi_agent
+app.include_router(real_multi_agent.router, prefix="/api/real-multi-agent")
 
 # Route for root path to serve React app
 @app.get("/")
@@ -68,21 +68,26 @@ async def serve_frontend():
     else:
         return {"message": "MARGDARSHAK API is running - Frontend build not found"}
 
-# Serve static assets directly (favicon, manifest, etc.)
-@app.get("/{filename}")
-async def serve_static_files(filename: str):
-    """Serve static files from build directory"""
-    # Skip API routes
-    if filename.startswith("api") or filename.startswith("docs") or filename == "openapi.json":
-        return {"error": "Not Found"}
+# Catch-all route for React Router (must be last)
+@app.get("/{full_path:path}")
+async def serve_spa_routes(full_path: str):
+    """Serve React app for all routes (SPA routing)"""
+    print(f"🔄 SPA route requested: {full_path}")
     
-    file_path = os.path.join(os.path.dirname(__file__), "frontend", "build", filename)
+    # Don't serve SPA for API routes
+    if full_path.startswith("api/"):
+        return {"error": "API endpoint not found"}
+    
+    # Try to serve static file first
+    file_path = os.path.join(os.path.dirname(__file__), "frontend", "build", full_path)
     if os.path.exists(file_path) and os.path.isfile(file_path):
+        print(f"📄 Serving static file: {file_path}")
         return FileResponse(file_path)
     
-    # If not a static file, serve React app (for client-side routing)
+    # Serve React app for all other routes
     frontend_path = os.path.join(os.path.dirname(__file__), "frontend", "build", "index.html")
     if os.path.exists(frontend_path):
+        print(f"🏠 Serving SPA for route: {full_path}")
         return FileResponse(frontend_path, media_type='text/html')
     else:
         return {"message": "MARGDARSHAK API is running"}
