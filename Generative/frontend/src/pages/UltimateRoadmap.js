@@ -420,14 +420,40 @@ const SimplifiedUltimateRoadmap = () => {
                                    point.toLowerCase().includes('create'))
                     .slice(0, 3);
                   
+                  // Extract tools - improved pattern matching for broader tool extraction
                   const tools = allBulletPoints
-                    .filter(point => point.includes('HTML') || point.includes('CSS') || 
-                                   point.includes('JavaScript') || point.includes('Python') ||
-                                   point.includes('React') || point.includes('Node') ||
-                                   point.includes('Git') || point.includes('API') ||
-                                   point.toLowerCase().includes('framework') ||
-                                   point.toLowerCase().includes('library'))
+                    .filter(point => {
+                      const lowerPoint = point.toLowerCase();
+                      return lowerPoint.includes('tool') || lowerPoint.includes('software') || 
+                             lowerPoint.includes('platform') || lowerPoint.includes('environment') ||
+                             lowerPoint.includes('html') || lowerPoint.includes('css') || 
+                             lowerPoint.includes('javascript') || lowerPoint.includes('python') ||
+                             lowerPoint.includes('react') || lowerPoint.includes('node') ||
+                             lowerPoint.includes('git') || lowerPoint.includes('api') ||
+                             lowerPoint.includes('framework') || lowerPoint.includes('library') ||
+                             lowerPoint.includes('figma') || lowerPoint.includes('sketch') ||
+                             lowerPoint.includes('vs code') || lowerPoint.includes('vscode') ||
+                             lowerPoint.includes('github') || lowerPoint.includes('npm') ||
+                             lowerPoint.includes('webpack') || lowerPoint.includes('babel') ||
+                             lowerPoint.includes('typescript') || lowerPoint.includes('angular') ||
+                             lowerPoint.includes('vue') || lowerPoint.includes('docker') ||
+                             lowerPoint.includes('aws') || lowerPoint.includes('azure') ||
+                             lowerPoint.includes('firebase') || lowerPoint.includes('mongodb') ||
+                             lowerPoint.includes('mysql') || lowerPoint.includes('postgresql');
+                    })
                     .slice(0, 5);
+                  
+                  // If no specific tools found, try extracting from Tools section
+                  if (tools.length === 0) {
+                    const toolsMatch = phaseText.match(/###\s*Tools?[\s\S]*?(?=###|\n\n|$)/i);
+                    if (toolsMatch) {
+                      const toolLines = toolsMatch[0].split('\n')
+                        .filter(line => line.trim().startsWith('-') || line.match(/^\d+\./))
+                        .map(line => line.replace(/^[-\d+\.\s]*/, '').trim())
+                        .filter(tool => tool.length > 2);
+                      tools.push(...toolLines.slice(0, 5));
+                    }
+                  }
                   
                   console.log('🔍 Extracted projects:', projects);
                   console.log('🔍 Extracted tools:', tools);
