@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "cd Generative/frontend && npm install && npm run build && cd ../.. && cp -r Generative/frontend/build/* .",
+    "build": "cd Generative/frontend && npm install && npm run build && cd ../.. && cp -r Generative/frontend/build/* . && cp -f Generative/frontend/build/index.html .",
     "start": "cd Generative/frontend && npm start"
   }
 }
