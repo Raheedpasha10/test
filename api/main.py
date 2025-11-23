@@ -1,80 +1,53 @@
 """
-Simple Vercel API Entry Point for Margdarshan Backend
+Lightweight Vercel API for Student Compass - No Heavy Dependencies
 """
 
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
 import os
 import json
-import httpx
-
-# Create FastAPI app
-app = FastAPI(title="Student Compass API")
-
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+import urllib.request
+import urllib.parse
+import urllib.error
 
 # Get API keys from environment
 groq_api_key = os.getenv("GROQ_API_KEY")
 google_api_key = os.getenv("GOOGLE_GENAI_API_KEY")
 
-# Lightweight Groq AI function
-async def call_groq_ai(prompt: str) -> str:
-    """Call Groq AI API"""
+def call_groq_ai(prompt: str) -> str:
+    """Call Groq AI API using urllib"""
     if not groq_api_key:
         return None
         
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                "https://api.groq.com/openai/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {groq_api_key}",
-                    "Content-Type": "application/json"
-                },
-                json={
-                    "model": "llama-3.1-8b-instant",
-                    "messages": [
-                        {"role": "system", "content": "You are a senior technical career advisor with 15+ years of industry experience."},
-                        {"role": "user", "content": prompt}
-                    ],
-                    "temperature": 0.7,
-                    "max_tokens": 3000
-                },
-                timeout=30.0
-            )
-            if response.status_code == 200:
-                data = response.json()
-                return data.get("choices", [{}])[0].get("message", {}).get("content", "")
+        data = {
+            "model": "llama-3.1-8b-instant",
+            "messages": [
+                {"role": "system", "content": "You are a senior technical career advisor with 15+ years of industry experience."},
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": 0.7,
+            "max_tokens": 3000
+        }
+        
+        req = urllib.request.Request(
+            "https://api.groq.com/openai/v1/chat/completions",
+            data=json.dumps(data).encode('utf-8'),
+            headers={
+                "Authorization": f"Bearer {groq_api_key}",
+                "Content-Type": "application/json"
+            }
+        )
+        
+        with urllib.request.urlopen(req, timeout=30) as response:
+            result = json.loads(response.read().decode('utf-8'))
+            return result.get("choices", [{}])[0].get("message", {}).get("content", "")
+            
     except Exception as e:
         print(f"Groq AI error: {e}")
     return None
 
-@app.get("/api/health")
-async def health_check():
-    """Health check endpoint"""
-    return {
-        "status": "healthy",
-        "groq_available": groq_api_key is not None,
-        "google_ai_available": google_api_key is not None
-    }
-
-@app.post("/api/multi-agent-roadmap")
-async def generate_roadmap(request: Request):
-    """Generate multi-agent roadmap"""
-    try:
-        request_data = await request.json()
-        query = request_data.get("query", "")
-        
-        if not groq_api_key:
-            # Fallback roadmap
-            fallback_roadmap = f"""# {query} Learning Roadmap
+def generate_fallback_roadmap(query: str) -> str:
+    """Generate fallback roadmap when AI is unavailable"""
+    return f"""# {query} Learning Roadmap
 
 ## Phase 1: Foundation (4-6 weeks)
 ### Goals
@@ -131,10 +104,41 @@ async def generate_roadmap(request: Request):
 
 ### Tools
 - Professional-grade tools
-- Industry-standard platforms"""
+- Industry-standard platforms
 
-            return {
-                "final_roadmap": fallback_roadmap,
+## Phase 4: Specialization (10-12 weeks)
+### Goals
+- Deep dive into {query} specialization
+- Master advanced techniques
+- Build professional portfolio
+
+### Topics
+- Expert-level {query} concepts
+- Industry trends and innovations
+- Advanced problem solving
+
+### Projects
+- Capstone project
+- Open source contributions
+
+### Tools
+- Professional toolchain
+- Industry certifications"""
+
+def generate_roadmap_response(query: str):
+    """Generate roadmap using AI or fallback"""
+    headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json'
+    }
+    
+    if not groq_api_key:
+        # Use fallback roadmap
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                "final_roadmap": generate_fallback_roadmap(query),
                 "agent_insights": [],
                 "metadata": {
                     "query": query,
@@ -143,10 +147,11 @@ async def generate_roadmap(request: Request):
                     "error": "AI service not available - using fallback",
                     "fallback": True
                 }
-            }
-        
-        # Create technical roadmap prompt
-        technical_prompt = f"""As a technical career expert, create a detailed roadmap for: {query}
+            })
+        }
+    
+    # Create technical roadmap prompt
+    technical_prompt = f"""As a technical career expert, create a detailed roadmap for: {query}
 
 Format as markdown with this EXACT structure:
 
@@ -171,11 +176,14 @@ Format as markdown with this EXACT structure:
 
 Create 4-5 phases with SPECIFIC {query} terminology and real industry requirements."""
 
-        # Call Groq AI
-        groq_content = await call_groq_ai(technical_prompt)
-        
-        if groq_content:
-            return {
+    # Call Groq AI
+    groq_content = call_groq_ai(technical_prompt)
+    
+    if groq_content:
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
                 "final_roadmap": groq_content,
                 "agent_insights": [{
                     "agent_name": "Technical Analysis Agent",
@@ -188,51 +196,15 @@ Create 4-5 phases with SPECIFIC {query} terminology and real industry requiremen
                     "successful_agents": 1,
                     "agents_used": ["Technical Analysis Agent"]
                 }
-            }
-        else:
-            # Fallback if AI call fails
-            fallback_roadmap = f"""# {query} Learning Roadmap
-
-## Phase 1: Foundation (4-6 weeks)
-### Goals
-- Learn fundamental {query} concepts
-- Set up development environment
-- Complete first practice projects
-
-### Topics
-- Basic {query} principles
-- Core tools and technologies
-- Development best practices
-
-### Projects
-- Hello World application
-- Basic project implementation
-
-### Tools
-- Code editor/IDE
-- Version control (Git)
-
-## Phase 2: Development (6-8 weeks)
-### Goals
-- Build intermediate {query} skills
-- Create portfolio projects
-- Learn advanced concepts
-
-### Topics
-- Advanced {query} features
-- Framework knowledge
-- Testing and debugging
-
-### Projects
-- Portfolio project 1
-- Technical challenge completion
-
-### Tools
-- Framework tools
-- Testing frameworks"""
-
-            return {
-                "final_roadmap": fallback_roadmap,
+            })
+        }
+    else:
+        # Fallback if AI call fails
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                "final_roadmap": generate_fallback_roadmap(query),
                 "agent_insights": [],
                 "metadata": {
                     "query": query,
@@ -241,10 +213,65 @@ Create 4-5 phases with SPECIFIC {query} terminology and real industry requiremen
                     "error": "AI generation failed - using fallback",
                     "fallback": True
                 }
+            })
+        }
+
+def handler(event, context=None):
+    """Main Vercel serverless function handler"""
+    try:
+        # Get request info
+        method = event.get('httpMethod', 'GET')
+        path = event.get('path', '/')
+        
+        # CORS headers
+        headers = {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+            'Content-Type': 'application/json'
+        }
+        
+        # Handle CORS preflight
+        if method == 'OPTIONS':
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps({'message': 'OK'})
             }
+        
+        # Health endpoint
+        if path in ['/api/health', '/health'] and method == 'GET':
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps({
+                    'status': 'healthy',
+                    'groq_available': bool(groq_api_key),
+                    'google_ai_available': bool(google_api_key)
+                })
+            }
+        
+        # Roadmap endpoint
+        if path in ['/api/multi-agent-roadmap', '/multi-agent-roadmap'] and method == 'POST':
+            body = event.get('body', '{}')
+            if isinstance(body, str):
+                request_data = json.loads(body)
+            else:
+                request_data = body
+                
+            query = request_data.get('query', '')
+            return generate_roadmap_response(query)
+        
+        # 404 for other routes
+        return {
+            'statusCode': 404,
+            'headers': headers,
+            'body': json.dumps({'error': 'Not Found'})
+        }
         
     except Exception as e:
         return {
-            "error": f"Multi-agent roadmap generation failed: {str(e)}",
-            "final_roadmap": f"# {query} Learning Path\n\nRoadmap generation temporarily unavailable."
+            'statusCode': 500,
+            'headers': {'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json'},
+            'body': json.dumps({'error': f'Internal server error: {str(e)}'})
         }

@@ -1,3 +1,2 @@
-fastapi>=0.104.1
-httpx>=0.25.2
-python-multipart>=0.0.6
+# No external dependencies - using Python built-ins only
+# urllib, json, os are all built into Python
