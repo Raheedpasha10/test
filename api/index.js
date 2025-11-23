@@ -1,7 +1,7 @@
 // Ultra-lightweight Node.js API for Vercel
 const https = require('https');
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -23,7 +23,7 @@ export default async function handler(req, res) {
   }
 
   // Roadmap endpoint
-  if (req.url.includes('roadmap') && req.method === 'POST') {
+  if (req.url.includes('multi-agent-roadmap') && req.method === 'POST') {
     try {
       const { query } = req.body || {};
       const roadmap = await getRoadmap(query || 'web development');
