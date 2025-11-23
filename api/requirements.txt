@@ -1,2 +1,0 @@
-# No external dependencies - using Python built-ins only
-# urllib, json, os are all built into Python

@@ -1,277 +1,172 @@
-"""
-Lightweight Vercel API for Student Compass - No Heavy Dependencies
-"""
-
-import os
 import json
+import os
 import urllib.request
-import urllib.parse
-import urllib.error
 
-# Get API keys from environment
-groq_api_key = os.getenv("GROQ_API_KEY")
-google_api_key = os.getenv("GOOGLE_GENAI_API_KEY")
-
-def call_groq_ai(prompt: str) -> str:
-    """Call Groq AI API using urllib"""
-    if not groq_api_key:
-        return None
-        
-    try:
-        data = {
-            "model": "llama-3.1-8b-instant",
-            "messages": [
-                {"role": "system", "content": "You are a senior technical career advisor with 15+ years of industry experience."},
-                {"role": "user", "content": prompt}
-            ],
-            "temperature": 0.7,
-            "max_tokens": 3000
-        }
-        
-        req = urllib.request.Request(
-            "https://api.groq.com/openai/v1/chat/completions",
-            data=json.dumps(data).encode('utf-8'),
-            headers={
-                "Authorization": f"Bearer {groq_api_key}",
-                "Content-Type": "application/json"
-            }
-        )
-        
-        with urllib.request.urlopen(req, timeout=30) as response:
-            result = json.loads(response.read().decode('utf-8'))
-            return result.get("choices", [{}])[0].get("message", {}).get("content", "")
-            
-    except Exception as e:
-        print(f"Groq AI error: {e}")
-    return None
-
-def generate_fallback_roadmap(query: str) -> str:
-    """Generate fallback roadmap when AI is unavailable"""
-    return f"""# {query} Learning Roadmap
-
-## Phase 1: Foundation (4-6 weeks)
-### Goals
-- Master fundamental concepts for {query}
-- Build basic skills and understanding
-- Establish strong learning foundation
-
-### Topics
-- Core principles and concepts
-- Essential tools and technologies
-- Best practices and methodologies
-
-### Projects
-- Beginner-friendly project
-- Hands-on practice exercises
-
-### Tools
-- Industry-standard tools
-- Learning platforms and resources
-
-## Phase 2: Development (6-8 weeks)
-### Goals
-- Apply knowledge in practical scenarios
-- Build intermediate-level skills
-- Create portfolio projects
-
-### Topics
-- Advanced concepts and techniques
-- Real-world applications
-- Problem-solving approaches
-
-### Projects
-- Intermediate project development
-- Portfolio building
-
-### Tools
-- Professional development tools
-- Advanced frameworks
-
-## Phase 3: Professional Application (8-10 weeks)
-### Goals
-- Develop professional-level competency
-- Build advanced projects
-- Prepare for job market
-
-### Topics
-- Advanced {query} concepts
-- Industry best practices
-- Professional development
-
-### Projects
-- Advanced portfolio projects
-- Real-world applications
-
-### Tools
-- Professional-grade tools
-- Industry-standard platforms
-
-## Phase 4: Specialization (10-12 weeks)
-### Goals
-- Deep dive into {query} specialization
-- Master advanced techniques
-- Build professional portfolio
-
-### Topics
-- Expert-level {query} concepts
-- Industry trends and innovations
-- Advanced problem solving
-
-### Projects
-- Capstone project
-- Open source contributions
-
-### Tools
-- Professional toolchain
-- Industry certifications"""
-
-def generate_roadmap_response(query: str):
-    """Generate roadmap using AI or fallback"""
+def handler(event, context=None):
+    """Ultra-lightweight Vercel handler"""
+    
+    # CORS headers
     headers = {
         'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
         'Content-Type': 'application/json'
     }
     
-    if not groq_api_key:
-        # Use fallback roadmap
+    method = event.get('httpMethod', 'GET')
+    path = event.get('path', '/')
+    
+    # Handle OPTIONS for CORS
+    if method == 'OPTIONS':
+        return {'statusCode': 200, 'headers': headers, 'body': '{}'}
+    
+    # Health check
+    if 'health' in path:
         return {
             'statusCode': 200,
             'headers': headers,
-            'body': json.dumps({
-                "final_roadmap": generate_fallback_roadmap(query),
-                "agent_insights": [],
-                "metadata": {
-                    "query": query,
-                    "num_agents": 0,
-                    "successful_agents": 0,
-                    "error": "AI service not available - using fallback",
-                    "fallback": True
-                }
-            })
+            'body': json.dumps({'status': 'healthy'})
         }
     
-    # Create technical roadmap prompt
-    technical_prompt = f"""As a technical career expert, create a detailed roadmap for: {query}
-
-Format as markdown with this EXACT structure:
-
-## Phase 1: Foundation (4-6 weeks)
-### Goals
-- [Specific technical goal 1]
-- [Specific technical goal 2]
-- [Specific technical goal 3]
-
-### Topics
-- [Technical topic 1]
-- [Technical topic 2]
-- [Technical topic 3]
-
-### Projects
-- [Hands-on project 1]
-- [Hands-on project 2]
-
-### Tools
-- [Industry tool 1]
-- [Industry tool 2]
-
-Create 4-5 phases with SPECIFIC {query} terminology and real industry requirements."""
-
-    # Call Groq AI
-    groq_content = call_groq_ai(technical_prompt)
-    
-    if groq_content:
-        return {
-            'statusCode': 200,
-            'headers': headers,
-            'body': json.dumps({
-                "final_roadmap": groq_content,
-                "agent_insights": [{
-                    "agent_name": "Technical Analysis Agent",
-                    "contribution": "Generated specialized roadmap content",
-                    "confidence": 0.85
-                }],
-                "metadata": {
-                    "query": query,
-                    "num_agents": 1,
-                    "successful_agents": 1,
-                    "agents_used": ["Technical Analysis Agent"]
-                }
-            })
-        }
-    else:
-        # Fallback if AI call fails
-        return {
-            'statusCode': 200,
-            'headers': headers,
-            'body': json.dumps({
-                "final_roadmap": generate_fallback_roadmap(query),
-                "agent_insights": [],
-                "metadata": {
-                    "query": query,
-                    "num_agents": 0,
-                    "successful_agents": 0,
-                    "error": "AI generation failed - using fallback",
-                    "fallback": True
-                }
-            })
-        }
-
-def handler(event, context=None):
-    """Main Vercel serverless function handler"""
-    try:
-        # Get request info
-        method = event.get('httpMethod', 'GET')
-        path = event.get('path', '/')
-        
-        # CORS headers
-        headers = {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-            'Content-Type': 'application/json'
-        }
-        
-        # Handle CORS preflight
-        if method == 'OPTIONS':
-            return {
-                'statusCode': 200,
-                'headers': headers,
-                'body': json.dumps({'message': 'OK'})
-            }
-        
-        # Health endpoint
-        if path in ['/api/health', '/health'] and method == 'GET':
+    # Roadmap endpoint
+    if 'roadmap' in path and method == 'POST':
+        try:
+            body = event.get('body', '{}')
+            data = json.loads(body) if isinstance(body, str) else body
+            query = data.get('query', 'web development')
+            
+            # Try AI call or use fallback
+            roadmap = get_roadmap(query)
+            
             return {
                 'statusCode': 200,
                 'headers': headers,
                 'body': json.dumps({
-                    'status': 'healthy',
-                    'groq_available': bool(groq_api_key),
-                    'google_ai_available': bool(google_api_key)
+                    'final_roadmap': roadmap,
+                    'agent_insights': [{'agent_name': 'AI Agent', 'confidence': 0.8}],
+                    'metadata': {'query': query, 'num_agents': 1}
                 })
             }
-        
-        # Roadmap endpoint
-        if path in ['/api/multi-agent-roadmap', '/multi-agent-roadmap'] and method == 'POST':
-            body = event.get('body', '{}')
-            if isinstance(body, str):
-                request_data = json.loads(body)
-            else:
-                request_data = body
-                
-            query = request_data.get('query', '')
-            return generate_roadmap_response(query)
-        
-        # 404 for other routes
-        return {
-            'statusCode': 404,
-            'headers': headers,
-            'body': json.dumps({'error': 'Not Found'})
-        }
-        
-    except Exception as e:
-        return {
-            'statusCode': 500,
-            'headers': {'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json'},
-            'body': json.dumps({'error': f'Internal server error: {str(e)}'})
-        }
+        except Exception as e:
+            return {
+                'statusCode': 500,
+                'headers': headers,
+                'body': json.dumps({'error': str(e)})
+            }
+    
+    return {
+        'statusCode': 404,
+        'headers': headers,
+        'body': json.dumps({'error': 'Not found'})
+    }
+
+def get_roadmap(query):
+    """Get roadmap from AI or fallback"""
+    groq_key = os.getenv('GROQ_API_KEY')
+    
+    if groq_key:
+        try:
+            prompt = f"Create a detailed {query} learning roadmap with 4 phases, goals, topics, projects, and tools for each phase."
+            
+            req_data = {
+                "model": "llama-3.1-8b-instant",
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 2000
+            }
+            
+            req = urllib.request.Request(
+                'https://api.groq.com/openai/v1/chat/completions',
+                data=json.dumps(req_data).encode(),
+                headers={
+                    'Authorization': f'Bearer {groq_key}',
+                    'Content-Type': 'application/json'
+                }
+            )
+            
+            with urllib.request.urlopen(req, timeout=25) as response:
+                result = json.loads(response.read().decode())
+                return result.get('choices', [{}])[0].get('message', {}).get('content', fallback_roadmap(query))
+        except:
+            pass
+    
+    return fallback_roadmap(query)
+
+def fallback_roadmap(query):
+    """Fallback roadmap"""
+    return f"""# {query.title()} Learning Roadmap
+
+## Phase 1: Foundation (4-6 weeks)
+### Goals
+- Master fundamental {query} concepts
+- Set up development environment
+- Complete basic projects
+
+### Topics
+- Core {query} principles
+- Essential tools and technologies
+- Best practices
+
+### Projects
+- Hello World project
+- Basic portfolio site
+
+### Tools
+- Code editor (VS Code)
+- Version control (Git)
+
+## Phase 2: Development (6-8 weeks)
+### Goals
+- Build intermediate skills
+- Create portfolio projects
+- Learn frameworks
+
+### Topics
+- Advanced {query} concepts
+- Popular frameworks
+- Testing basics
+
+### Projects
+- Interactive application
+- API integration project
+
+### Tools
+- Framework tools
+- Testing frameworks
+
+## Phase 3: Advanced (8-10 weeks)
+### Goals
+- Master advanced concepts
+- Build complex applications
+- Learn deployment
+
+### Topics
+- Performance optimization
+- Security best practices
+- Deployment strategies
+
+### Projects
+- Full-stack application
+- Open source contribution
+
+### Tools
+- Cloud platforms
+- CI/CD tools
+
+## Phase 4: Professional (10-12 weeks)
+### Goals
+- Prepare for job market
+- Build professional portfolio
+- Network with professionals
+
+### Topics
+- Interview preparation
+- Industry trends
+- Soft skills
+
+### Projects
+- Capstone project
+- Portfolio website
+
+### Tools
+- Professional networking
+- Portfolio platforms"""
