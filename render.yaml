@@ -10,8 +10,11 @@ services:
       pip install --upgrade pip
       pip install -r requirements.txt
       echo "✅ Python build complete!"
-      echo "📁 Checking if frontend build exists..."
-      ls -la frontend/build/ || echo "No build directory found"
+      echo "📦 Building frontend..."
+      cd frontend && npm install && npm run build
+      echo "✅ Frontend build complete!"
+      echo "📁 Checking frontend build..."
+      ls -la build/ || echo "No build directory found"
     startCommand: "cd Generative && python main.py"
     envVars:
       - key: GROQ_API_KEY
