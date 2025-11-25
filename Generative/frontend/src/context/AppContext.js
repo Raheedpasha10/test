@@ -119,11 +119,90 @@ export const AppProvider = ({ children }) => {
   );
 };
 
+// Storage utilities
+const StorageUtils = {
+  // Save roadmap data with timestamp
+  saveRoadmap: (skills, expertise, data) => {
+    try {
+      const cacheKey = `roadmap-${skills}-${expertise}`;
+      const cacheData = {
+        timestamp: Date.now(),
+        skills,
+        expertise,
+        data
+      };
+      localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+      console.log('✅ Roadmap cached successfully:', cacheKey);
+    } catch (error) {
+      console.warn('Failed to cache roadmap:', error);
+    }
+  },
+
+  // Load roadmap data if valid (within 24 hours)
+  loadRoadmap: (skills, expertise) => {
+    try {
+      const cacheKey = `roadmap-${skills}-${expertise}`;
+      const cached = localStorage.getItem(cacheKey);
+      if (!cached) return null;
+
+      const cacheData = JSON.parse(cached);
+      const age = Date.now() - cacheData.timestamp;
+      const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+
+      if (age > maxAge) {
+        localStorage.removeItem(cacheKey);
+        console.log('🗑️ Expired roadmap cache removed:', cacheKey);
+        return null;
+      }
+
+      console.log('✅ Roadmap loaded from cache:', cacheKey);
+      return cacheData.data;
+    } catch (error) {
+      console.warn('Failed to load cached roadmap:', error);
+      return null;
+    }
+  },
+
+  // Save specialization selection
+  saveSpecialization: (skills, expertise) => {
+    try {
+      const selection = { skills, expertise, timestamp: Date.now() };
+      localStorage.setItem('last-specialization', JSON.stringify(selection));
+      console.log('✅ Specialization saved:', { skills, expertise });
+    } catch (error) {
+      console.warn('Failed to save specialization:', error);
+    }
+  },
+
+  // Load last specialization
+  loadSpecialization: () => {
+    try {
+      const cached = localStorage.getItem('last-specialization');
+      if (!cached) return null;
+
+      const selection = JSON.parse(cached);
+      const age = Date.now() - selection.timestamp;
+      const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+      if (age > maxAge) {
+        localStorage.removeItem('last-specialization');
+        return null;
+      }
+
+      console.log('✅ Specialization loaded from cache:', selection);
+      return { skills: selection.skills, expertise: selection.expertise };
+    } catch (error) {
+      console.warn('Failed to load cached specialization:', error);
+      return null;
+    }
+  }
+};
+
 // Custom hook to use the context
 export const useAppContext = () => {
   const context = useContext(AppContext);
   if (!context) {
     throw new Error('useAppContext must be used within an AppProvider');
   }
-  return context;
+  return { ...context, StorageUtils };
 };

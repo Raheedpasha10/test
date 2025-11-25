@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import LinearButton from '../components/LinearButton';
@@ -81,7 +81,8 @@ const Landing = () => {
   const [animationStage, setAnimationStage] = useState(0);
   const [activeCareerIndex, setActiveCareerIndex] = useState(0);
   const navigate = useNavigate();
-  const { setCurrentSkills, setCurrentExpertise } = useAppContext();
+  const location = useLocation();
+  const { currentSkills, setCurrentSkills, setCurrentExpertise, StorageUtils } = useAppContext();
   const heroRef = useRef(null);
   const carouselRef = useRef(null);
 
@@ -149,6 +150,32 @@ const Landing = () => {
       pattern: 'trend'
     }
   ];
+
+  // Handle auto-scroll when navigated from UltimateRoadmap
+  useEffect(() => {
+    if (location.state?.scrollTo) {
+      const timer = setTimeout(() => {
+        scrollToSection(location.state.scrollTo);
+        console.log('📍 Auto-scrolling to section:', location.state.scrollTo);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [location.state]);
+
+  // Load last specialization with delay to avoid race conditions
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (StorageUtils && !currentSkills) {  // Only if no current selection
+        const lastSelection = StorageUtils.loadSpecialization();
+        if (lastSelection && lastSelection.skills && lastSelection.expertise) {
+          console.log('📋 Restoring last specialization:', lastSelection);
+          setCurrentSkills(lastSelection.skills);
+          setCurrentExpertise(lastSelection.expertise);
+        }
+      }
+    }, 500); // Delay ensures components are fully loaded
+    return () => clearTimeout(timer);
+  }, []); // NO dependencies to avoid re-renders
 
   // Staggered animation sequence
   useEffect(() => {
@@ -268,7 +295,11 @@ const Landing = () => {
   const handleQuickSelect = (field) => {
     setCurrentSkills(field);
     setCurrentExpertise('Beginner');
-      navigate('/simplified-ultimate-roadmap');
+    // Save specialization selection
+    if (StorageUtils) {
+      StorageUtils.saveSpecialization(field, 'Beginner');
+    }
+    navigate('/simplified-ultimate-roadmap');
   };
 
   const handleCategorySelect = (categoryId) => {
@@ -285,7 +316,11 @@ const Landing = () => {
   const handleDomainSelect = (domain) => {
     setCurrentSkills(domain);
     setCurrentExpertise('Beginner');
-      navigate('/simplified-ultimate-roadmap');
+    // Save specialization selection
+    if (StorageUtils) {
+      StorageUtils.saveSpecialization(domain, 'Beginner');
+    }
+    navigate('/simplified-ultimate-roadmap');
   };
 
 
@@ -652,7 +687,7 @@ const Landing = () => {
                   animate={{ opacity: animationStage >= 1 ? 1 : 0, y: animationStage >= 1 ? 0 : 20 }}
                   transition={{ duration: 0.6, delay: 0, ease: [0.25, 0.46, 0.45, 0.94] }}
                 >
-                  Career guidance that moves at your pace
+                  Career navigation that moves at your pace
               </motion.h1>
               
               <motion.p 

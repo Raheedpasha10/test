@@ -24,7 +24,7 @@ const SimplifiedUltimateRoadmap = () => {
   const [agentStatus, setAgentStatus] = useState({ current: '', agents: [] });
   const [expandedPhases, setExpandedPhases] = useState(new Set());
   const navigate = useNavigate();
-  const { currentSkills, currentExpertise, showGlobalFunnelingReport } = useAppContext();
+  const { currentSkills, currentExpertise, showGlobalFunnelingReport, StorageUtils } = useAppContext();
 
   // Enhanced agent detection for frontend display
   const getSpecializedAgents = React.useCallback((skills) => {
@@ -177,6 +177,21 @@ const SimplifiedUltimateRoadmap = () => {
         setError(null);
         setLoading(true);
         setUsingDemoData(false);
+        
+        // Check cache first before making API calls
+        if (StorageUtils && currentSkills && currentExpertise) {
+          console.log('🔍 Checking cache for:', currentSkills, currentExpertise);
+          const cachedRoadmap = StorageUtils.loadRoadmap(currentSkills, currentExpertise);
+          
+          if (cachedRoadmap) {
+            console.log('✅ Found cached roadmap, loading instantly!');
+            setRoadmapData(cachedRoadmap);
+            setLoading(false);
+            setUsingDemoData(false);
+            return; // Exit early with cached data
+          }
+        }
+        
         setAgentStatus({ current: 'Initializing Multi-Agent AI System...', agents: [] });
         
         console.log('✅ Loading state set to true, should show LoadingScreen now');
@@ -507,6 +522,11 @@ const SimplifiedUltimateRoadmap = () => {
           const finalData = { ...data, learning_path: learning_path || [] };
           setRoadmapData(finalData);
           setUsingDemoData(false);
+          
+          // Save to localStorage cache for persistence
+          if (StorageUtils && currentSkills && currentExpertise) {
+            StorageUtils.saveRoadmap(currentSkills, currentExpertise, finalData);
+          }
           
           // Cache in sessionStorage
           try { 
@@ -894,7 +914,7 @@ const SimplifiedUltimateRoadmap = () => {
             </p>
             
             <div className="flex items-center gap-4">
-              <LinearButton variant="secondary" size="large" onClick={() => navigate('/career-path')}>
+              <LinearButton variant="secondary" size="large" onClick={() => navigate('/', { state: { scrollTo: 'category-explorer' } })}>
                 ← Change Career
               </LinearButton>
               <LinearButton variant="secondary" size="large" onClick={() => navigate('/flowchart')}>

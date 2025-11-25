@@ -194,7 +194,7 @@ const FunnelingReport = ({ sessionId, report }) => {
                 <div className="text-title-3 font-bold text-accent">
                   {Math.round((report.output_metrics?.roadmap_length || 0) / 1000)}k
                 </div>
-                <div className="text-small text-text-secondary">Characters Generated</div>
+                <div className="text-small text-text-secondary">Tokens Generated</div>
               </div>
             </div>
           </div>
